@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-16 mb-12">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 animate-slide-in">
+                Исследуйте наши коллекции
+            </h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Откройте для себя одежду премиум-класса в различных категориях
+            </p>
+        </div>
+    </section>
+
+    <!-- Categories Grid -->
+    <div class="container mx-auto px-6 mb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Card -->
+            {% for category in categories %}
+            <div class="group relative bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+                <!-- Изображение и оверлей при наведении -->
+                <div class="relative h-64 overflow-hidden">
+                    <img src="{{ category.image.url }}"
+                         alt="{{ category.name }}"
+                         class="w-full h-full object-cover transform group-hover:scale-105 transition duration-300">
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 opacity-0 group-hover:opacity-20 transition duration-300"></div>
+                </div>
+                <!-- Контент карточки -->
+                <div class="p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-3">{{ category.name }}</h2>
+                    <div class="flex justify-between items-center">
+                        <a href="{{ category.slug }}" class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 group">
+                            Посмотреть коллекцию
+                            <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <section class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Не нашли то, что ищете?</h2>
+            <p class="text-lg text-gray-600 mb-8">Cвяжитесь с нашими экспертами по стилю</p>
+            <div class="flex justify-center gap-4">
+                <a href="{% url 'contact' %}" class="px-8 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition duration-300">
+                    Связаться с поддержкой
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
