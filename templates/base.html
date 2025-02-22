@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Samal Textile{% endblock %}</title>
+  <title>{% block title %}Samal Trade and Promotion{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Внутри <head> -->
@@ -22,12 +22,15 @@
   <!-- Header -->
   <header class="bg-white shadow-lg fixed w-full z-10">
     <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="{% url 'home' %}" class="text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">Samal Textile</a>
-      <!-- Desktop Navigation -->
+      <a href="{% url 'home' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
+        Samal Trade and Promotion
+      </a>
+        <!-- Desktop Navigation -->
       <div class="hidden md:flex space-x-8">
         <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a>
         <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
         <a href="{% url 'contact' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Контакты</a>
+        <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900 hover-transition">О нас</a>
       </div>
       <!-- Hamburger Menu Button (Mobile) -->
       <button id="mobile-menu-button" class="md:hidden focus:outline-none">
@@ -82,7 +85,7 @@
       <div class="space-y-4">
         <h3 class="text-lg font-semibold uppercase tracking-wider">О нас</h3>
         <p class="text-sm">
-          Создаем уникальные корпоративные стили с 2010 года. Более 500 успешных проектов по всей стране.
+          Создаем уникальные корпоративные стили с 2015 года. Более 500 успешных проектов по всей стране.
         </p>
       </div>
 
@@ -92,19 +95,16 @@
         <ul class="space-y-2 text-sm">
           <li>
             <a href="tel:+77029330555" class="hover:text-white hover-transition">
-              <!-- Phone Icon -->
               +7 (702) 933-0555
             </a>
           </li>
           <li>
             <a href="tel:+77081224346" class="hover:text-white hover-transition">
-              <!-- Phone Icon -->
               +7 (708) 122-4346
             </a>
           </li>
           <li>
             <a href="tel:+77471227116" class="hover:text-white hover-transition">
-              <!-- Phone Icon -->
               +7 (747) 122-7116
             </a>
           </li>
@@ -117,20 +117,21 @@
         <ul class="space-y-2 text-sm">
           <li>
             <a href="mailto:samal-mayra@mail.ru" class="hover:text-white hover-transition">
-              <!-- Email Icon -->
               samal-mayra@mail.ru
             </a>
           </li>
           <li>
             <a href="mailto:samal_dinara@mail.ru" class="hover:text-white hover-transition">
-              <!-- Email Icon -->
               samal_dinara@mail.ru
             </a>
           </li>
+          <!-- New Yandex Navi Link -->
           <li>
-            <a href="https://www.google.com/maps/place/123+Fashion+Ave,+New+York,+NY+10001" target="_blank" class="hover:text-white hover-transition">
-              <!-- Map Marker Icon -->
-              123 Fashion Ave, New York, NY 10001
+            <a href="https://yandex.ru/navi?whatshere%5Bpoint%5D=76.91893790550279%2C43.26862147289903&whatshere%5Bzoom%5D=17.374372&ll=76.91893790550277%2C43.26862147251693&z=17.374372&si=5ej62116gud6dvc6rgyrw8nf8w"
+               target="_blank"
+               class="hover:text-white hover-transition">
+               Адрес: Проспект Райымбека, 221
+               Алматы
             </a>
           </li>
         </ul>
@@ -140,16 +141,23 @@
       <div class="space-y-4">
         <h3 class="text-lg font-semibold uppercase tracking-wider">Мы в соцсетях</h3>
         <div class="flex space-x-4">
-            <a href="https://www.instagram.com/Samalmayra" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
-                <!-- Correct Instagram Icon -->
-                <i class='bx bxl-instagram text-2xl'></i> 
-            </a>
-            <a href="https://www.instagram.com/Samal_trade_dinara" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
-                <!-- Alternative Instagram Icon -->
-                <i class='bx bxl-instagram-alt text-2xl'></i> 
-            </a>
+          <a href="https://www.instagram.com/Samalmayra" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
+            <i class='bx bxl-instagram text-2xl'></i> 
+          </a>
+          <a href="https://www.instagram.com/Samal_trade_dinara" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
+            <i class='bx bxl-instagram-alt text-2xl'></i> 
+          </a>
+          <a href="https://t.me/77081124346" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
+            <i class='bx bxl-telegram text-2xl'></i> 
+          </a>
+          <a href="https://wa.me/77081124346" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
+            <i class='bx bxl-whatsapp text-2xl'></i> 
+          </a>
+          <a href="https://wa.me/77029330555" target="_blank" class="hover:text-white transition duration-300 ease-in-out">
+            <i class='bx bxl-whatsapp text-2xl'></i> 
+          </a>
         </div>
-    </div>    
+      </div>    
 
     </div>
   </div>
@@ -157,7 +165,7 @@
   <!-- Copyright -->
   <div class="border-t border-gray-700">
     <div class="container mx-auto px-6 py-4">
-      <p class="text-center text-xs text-gray-400">&copy; {% now "Y" %} Samal Textile. Все права защищены.</p>
+      <p class="text-center text-xs text-gray-400">&copy; {% now "Y" %} Samal Trade and Promotion. Все права защищены.</p>
     </div>
   </div>
 </footer>
@@ -170,6 +178,7 @@
     mobileMenu.classList.toggle('hidden');
   });
 </script>
+
 
 </body>
 </html>
