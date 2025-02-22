@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+    {% block title %}Главная страница{% endblock %}
     <!-- Hero Section -->
     <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-16">
       <div class="container mx-auto px-4">
@@ -8,50 +9,48 @@
           <!-- Left Column -->
           <div class="space-y-6">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-              Корпоративная одежда
+              Корпоративный текстиль
               <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
                 для вашего бизнеса
               </span>
             </h1>
             <p class="text-lg text-gray-600">
-              Профессиональная униформа премиум-класса с индивидуальным дизайном.
-              Создаем образы, которые работают на ваш бренд.
+              Создайте корпоративный стиль вместе с нами! Футболки, поло, толстовки с вашим логотипом или без.
             </p>
-
           </div>
 
           <!-- Right Column Grid -->
           <div class="grid grid-cols-2 gap-4">
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <img src="https://source.unsplash.com/600x400?corporate"
+            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
+              <img src="{% static 'merch.png' %}"
                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Корпоративная сфера">
+                   alt="Корпоративный мерч, одежда">
               <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Медицина</span>
+                <span class="text-white font-bold text-lg">Корпоративный мерч, одежда</span>
               </div>
             </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <img src="https://source.unsplash.com/600x400?school"
+            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
+              <img src="{% static 'school.png' %}"
                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Образовательная сфера">
+                   alt="Школьная форма">
               <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Образование</span>
+                <span class="text-black font-bold text-lg">Школьная форма</span>
               </div>
             </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <img src="https://source.unsplash.com/600x400?restaurant"
+            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
+              <img src="{% static 'medicine.png' %}"
                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Ресторанная сфера">
+                   alt="Медицинская одежда">
               <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Рестораны</span>
+                <span class="text-gray-900 font-bold text-lg">Медицинская одежда</span>
               </div>
             </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <img src="https://source.unsplash.com/600x400?industry"
+            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
+              <img src="{% static 'sport.png' %}"
                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Промышленная сфера">
+                   alt="Спортивная одежда">
               <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Производство</span>
+                <span class="text-white font-bold text-lg">Спортивная одежда</span>
               </div>
             </div>
           </div>
@@ -97,7 +96,7 @@
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2">{{ category.name }}</h3>
             <!-- Replace '#' with your category detail URL or route -->
-            <a href="#"
+            <a href="{% url 'category_detail' category.slug %}"
                class="inline-flex items-center px-5 py-2.5 text-sm font-medium bg-blue-600 text-white
                       rounded-lg hover:bg-blue-700 transition duration-300 group">
               Посмотреть коллекцию

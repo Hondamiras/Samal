@@ -1,125 +1,112 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% block title %}{{ category.name }}{% endblock %}
 {% block content %}
 <div class="bg-gray-50">
     <!-- Breadcrumb Navigation -->
-    <nav class="container mx-auto px-4 py-4">
-        <ol class="flex items-center space-x-2 text-sm">
-            <li><a href="{% url 'home' %}" class="text-gray-500 hover:text-gray-700">Главная</a></li>
-            <li>/</li>
-            <li class="text-gray-700">{{ category.name }}</li>
-        </ol>
-    </nav>
-
-    <!-- Category Hero Section -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 py-16">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{{ category.name }}</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ category.description }}</p>
-            <span class="mt-4 inline-block bg-white rounded-full px-6 py-2 text-sm font-medium shadow-sm">
-                {{ products.paginator.count }} товаров
-            </span>
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <ol class="flex items-center space-x-3 text-sm">
+                <li>
+                    <a href="{% url 'home' %}" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                        Главная
+                    </a>
+                </li>
+                <li class="text-gray-400">/</li>
+                <li class="text-gray-700 font-medium">{{ category.name }}</li>
+            </ol>
         </div>
-    </div>
+    </nav>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-12">
         <div class="lg:flex lg:gap-8">
-            <!-- Filters Sidebar (Hidden on mobile) -->
-            <aside class="lg:w-64 mb-8 lg:mb-0">
-                <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-semibold mb-4">Фильтры</h3>
-                    <!-- Add filter components here -->
-                    <div class="space-y-4">
-                        <div class="border-t pt-4">
-                            <button class="w-full text-left hover:text-blue-600 transition-colors">
-                                Сбросить фильтры
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
             <!-- Product Grid -->
             <main class="flex-1">
-                <!-- Sorting Header -->
-                <div class="mb-6 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
-                    <div class="flex items-center space-x-4">
-                        <select class="border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option>Сортировать по</option>
-                            <option>Цена: по возрастанию</option>
-                            <option>Цена: по убыванию</option>
-                            <option>Новинки</option>
-                        </select>
+                <!-- Sorting Block -->
+                <div class="mb-8 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 w-full max-w-md mx-auto">
+                    <div class="flex items-center justify-center">
+                        <form method="GET" class="relative w-full">
+                            <select name="sort"
+                                    class="w-full pl-4 pr-12 py-3 text-sm font-medium text-gray-700 border-2 border-gray-200 
+                                           hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 
+                                           focus:ring-offset-2 rounded-xl transition-all cursor-pointer appearance-none"
+                                    onchange="this.form.submit()">
+                                <option value=''>По умолчанию</option>
+                                <option value="price_asc" {% if sort_option == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                                <option value="price_desc" {% if sort_option == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                                <option value="newest" {% if sort_option == 'newest' %}selected{% endif %}>Новинки</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </form>
                     </div>
-                    <button class="lg:hidden text-gray-600 hover:text-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                    </button>
                 </div>
+                
+                
 
                 <!-- Product List -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for product in products %}
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                        <a href="{% url 'product_detail' product.slug %}">
-                            <div class="aspect-square overflow-hidden rounded-t-lg">
+                    <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
+                        <a href="{% url 'product_detail' product.slug %}" class="block overflow-hidden rounded-t-xl">
+                            <!-- aspect-square keeps the container perfectly square -->
+                            <div class="relative h-80 overflow-hidden">
                                 <img src="{{ product.image.url }}" 
                                      alt="{{ product.name }}"
-                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                     class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
                             </div>
                         </a>
-                        <div class="p-4">
-                            <h3 class="font-medium text-gray-900 mb-2">
+                        <div class="p-5">
+                            <h3 class="font-semibold text-gray-900 text-lg mb-2">
                                 <a href="{% url 'product_detail' product.slug %}" 
                                    class="hover:text-blue-600 transition-colors">
                                     {{ product.name }}
                                 </a>
                             </h3>
                             <div class="flex items-center justify-between">
-                                <span class="text-lg font-bold text-blue-600">
+                                <span class="text-xl font-bold text-blue-600">
                                     {{ product.price }} ₽
                                 </span>
-                                <button class="bg-blue-100 text-blue-600 px-4 py-2 rounded-md 
-                                              hover:bg-blue-200 transition-colors">
-                                    В корзину
-                                </button>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
+                
+                
 
                 <!-- Pagination -->
                 {% if products.has_other_pages %}
                 <div class="mt-12 flex justify-center">
-                    <nav class="flex space-x-2">
+                    <nav class="flex items-center space-x-2">
                         {% if products.has_previous %}
-                        <a href="?page={{ products.previous_page_number }}" 
-                           class="px-4 py-2 border rounded-md hover:bg-gray-50">
-                            Назад
+                        <a href="?page={{ products.previous_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
+                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                            ← Назад
                         </a>
                         {% endif %}
 
                         {% for num in products.paginator.page_range %}
                         {% if products.number == num %}
-                        <span class="px-4 py-2 border rounded-md bg-blue-600 text-white">
+                        <span class="px-4 py-2 border border-blue-600 bg-blue-600 text-white rounded-lg">
                             {{ num }}
                         </span>
                         {% else %}
-                        <a href="?page={{ num }}" 
-                           class="px-4 py-2 border rounded-md hover:bg-gray-50">
+                        <a href="?page={{ num }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
+                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
                             {{ num }}
                         </a>
                         {% endif %}
                         {% endfor %}
 
                         {% if products.has_next %}
-                        <a href="?page={{ products.next_page_number }}" 
-                           class="px-4 py-2 border rounded-md hover:bg-gray-50">
-                            Вперед
+                        <a href="?page={{ products.next_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
+                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                            Вперед →
                         </a>
                         {% endif %}
                     </nav>
@@ -128,17 +115,5 @@
             </main>
         </div>
     </div>
-
-    <!-- Category Description -->
-    {% if category.full_description %}
-    <div class="bg-white border-t">
-        <div class="container mx-auto px-4 py-12">
-            <div class="max-w-3xl mx-auto prose">
-                <h2 class="text-2xl font-bold mb-6">Подробнее о категории</h2>
-                {{ category.full_description|safe }}
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}

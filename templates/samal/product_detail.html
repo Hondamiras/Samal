@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% block title %}{{ product.name }}{% endblock %}
 {% block content %}
 <div class="bg-gray-50">
     <!-- Breadcrumb Navigation -->
@@ -8,9 +8,9 @@
         <ol class="flex items-center space-x-2 text-sm">
             <li><a href="{% url 'home' %}" class="text-gray-500 hover:text-gray-700">Главная</a></li>
             <li>/</li>
-            <li><a href="{{ product.category.get_absolute_url }}" class="text-gray-500 hover:text-gray-700">{{ product.category.name }}</a></li>
+            <li><a href="{% url 'category_detail' category.slug %}" class="text-gray-500 hover:text-gray-700">{{ product.category.name }}</a></li>
             <li>/</li>
-            <li class="text-gray-700">{{ product.name }}</li>
+            <li class="text-gray-700 font-medium">{{ product.name }}</li>
         </ol>
     </nav>
 
@@ -24,20 +24,7 @@
                     <img id="main-image" 
                          src="{{ product.image.url }}" 
                          alt="{{ product.name }}" 
-                         class="w-full h-full object-contain p-6 cursor-zoom-in">
-                </div>
-
-                <!-- Thumbnails -->
-                <div class="flex space-x-4 overflow-x-auto pb-4">
-                    {% for image in product.images.all %}
-                    <div class="flex-shrink-0 w-24 h-24 border-2 border-transparent 
-                              {% if forloop.first %}border-blue-500{% endif %} rounded-lg overflow-hidden">
-                        <img src="{{ image.image.url }}" 
-                             alt="{{ product.name }}" 
-                             class="w-full h-full object-contain cursor-pointer bg-white p-2"
-                             onclick="document.getElementById('main-image').src = this.src">
-                    </div>
-                    {% endfor %}
+                         class="w-auto h-[300px] object-contain p-6 cursor-zoom-in">
                 </div>
             </div>
 
@@ -54,123 +41,25 @@
                     </div>
                 </div>
 
-                <!-- Variants -->
-                {% if product.variants.exists %}
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold">Варианты:</h3>
-                    <div class="flex flex-wrap gap-2">
-                        {% for variant in product.variants.all %}
-                        <button class="px-4 py-2 border rounded-full hover:border-blue-500 
-                                    {% if variant == product %}bg-blue-100 border-blue-500{% endif %}">
-                            {{ variant.name }}
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
                 <!-- Size Selector -->
                 <div class="space-y-4">
                     <h3 class="text-lg font-semibold">Размер:</h3>
                     <div class="grid grid-cols-4 gap-2">
-                        <button class="aspect-square border rounded-md hover:border-blue-500">S</button>
-                        <button class="aspect-square border rounded-md hover:border-blue-500">M</button>
-                        <button class="aspect-square border rounded-md hover:border-blue-500">L</button>
-                        <button class="aspect-square border rounded-md hover:border-blue-500">XL</button>
+                        <button class="aspect-square border rounded-md">S</button>
+                        <button class="aspect-square border rounded-md">M</button>
+                        <button class="aspect-square border rounded-md">L</button>
+                        <button class="aspect-square border rounded-md">XL</button>
                     </div>
                 </div>
 
-                <!-- Add to Cart -->
-                <div class="space-y-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center border rounded-lg">
-                            <button class="px-4 py-2 border-r">-</button>
-                            <input type="number" value="1" 
-                                   class="w-16 text-center border-none focus:ring-0">
-                            <button class="px-4 py-2 border-l">+</button>
-                        </div>
-                        <button class="flex-1 bg-blue-600 text-white py-3 rounded-lg 
-                                    hover:bg-blue-700 transition-colors">
-                            Добавить в корзину
-                        </button>
-                    </div>
-                    <div class="flex items-center space-x-4 text-sm text-gray-500">
-                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span>В наличии: {{ product.stock }} шт.</span>
+                <!-- Product Description (placed under sizes) -->
+                <div class="mt-8">
+                    <div class="prose max-w-none">
+                        {{ product.description|safe }}
                     </div>
                 </div>
-
-                <!-- Product Meta -->
-                <div class="pt-6 border-t">
-                    <dl class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="flex items-center">
-                            <dt class="text-gray-500 w-24">Артикул:</dt>
-                            <dd>{{ product.sku }}</dd>
-                        </div>
-                        <div class="flex items-center">
-                            <dt class="text-gray-500 w-24">Категория:</dt>
-                            <dd><a href="{{ product.category.get_absolute_url }}" 
-                                   class="text-blue-600 hover:underline">{{ product.category.name }}</a></dd>
-                        </div>
-                        {% if product.tags.exists %}
-                        <div class="col-span-2 flex items-center">
-                            <dt class="text-gray-500 w-24">Теги:</dt>
-                            <div class="flex flex-wrap gap-2">
-                                {% for tag in product.tags.all %}
-                                <a href="#" class="px-2 py-1 bg-gray-100 rounded-md text-sm 
-                                                  hover:bg-gray-200">{{ tag.name }}</a>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </dl>
-                </div>
             </div>
         </div>
-
-        <!-- Product Tabs -->
-        <div class="mt-12">
-            <div class="border-b">
-                <nav class="flex space-x-8">
-                    <button class="py-4 border-b-2 border-blue-500 font-medium">Описание</button>
-                    <button class="py-4 text-gray-500 hover:text-gray-700">Характеристики</button>
-                    <button class="py-4 text-gray-500 hover:text-gray-700">Отзывы ({{ product.reviews.count }})</button>
-                </nav>
-            </div>
-
-            <!-- Tab Content -->
-            <div class="py-8">
-                <div class="prose max-w-none">
-                    {{ product.description|safe }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Related Products -->
-        {% if related_products %}
-        <div class="mt-12">
-            <h2 class="text-2xl font-bold mb-6">Смотрите также</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {% for related in related_products %}
-                <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                    <a href="{{ related.get_absolute_url }}" class="block">
-                        <div class="aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
-                            <img src="{{ related.image.url }}" 
-                                 alt="{{ related.name }}" 
-                                 class="w-full h-full object-contain p-4">
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-medium text-gray-900 mb-2">{{ related.name }}</h3>
-                            <div class="text-lg font-bold text-blue-600">{{ related.price }} ₽</div>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

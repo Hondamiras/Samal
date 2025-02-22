@@ -138,6 +138,20 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Если вы используете реальный SMTP-сервер:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'         # адрес вашего SMTP-сервера
+EMAIL_PORT = 587                        # порт (обычно 587 для TLS)
+EMAIL_USE_TLS = True                    # использовать ли TLS
+EMAIL_HOST_USER = 'khondamiras@gmail.com'   # логин для SMTP-сервера
+EMAIL_HOST_PASSWORD = 'chaw fqnr iinr wkaz'           # пароль для SMTP-сервера
+
+# Адрес, с которого будут отправляться письма
+DEFAULT_FROM_EMAIL = 'khondamiras@gmail.com'
+
+# Адрес получателя сообщений с сайта (например, для обратной связи)
+CONTACT_EMAIL = 'khondamiras@gmail.com'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
