@@ -1,5 +1,5 @@
 from django.contrib import admin
-from samal.models import Product, Category
+from samal.models import Product, Category, ProductImage
 
 # Register your models here.
 @admin.register(Product)
@@ -15,3 +15,6 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
 
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ('product', 'image')

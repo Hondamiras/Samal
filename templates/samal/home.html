@@ -5,7 +5,7 @@
     <!-- Hero Section -->
     <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-16">
       <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-1 gap-8 items-center">
           <!-- Left Column -->
           <div class="space-y-6">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
@@ -15,44 +15,28 @@
               </span>
             </h1>
             <p class="text-lg text-gray-600">
-              Создайте корпоративный стиль вместе с нами! Футболки, рубашки-поло, толстовки, свитшоты, кепки с вашим логотипом и без.
-            </p>
+              Создайте корпоративный стиль вместе с нами! Футболки, рубашки-поло, толстовки, свитшоты, кепки с вашим логотипом и без.</p>
           </div>
     
-          <!-- Right Column Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
-              <img src="{% static 'merch.png' %}"
-                   class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Корпоративный мерч, одежда">
-              <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Корпоративный мерч, одежда</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            {% for category in categories %}
+              <div class="relative group overflow-hidden rounded-xl shadow-lg transition-all hover:shadow-2xl bg-blue-600">
+                <a href="{% url 'category_detail' category.slug %}" class="block">
+                  <!-- Fixed height container for the image -->
+                  <div class="h-64 w-full">
+                    <img src="{{ category.image.url }}"
+                         alt="{{ category.name }}"
+                         class="w-full h-full object-cover transition-transform duration-300 transform group-hover:scale-110 group-hover:brightness-75">
+                  </div>
+                  <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-40 transition-all duration-300">
+                    <span class="text-white font-bold text-lg transition-colors duration-300">
+                      {{ category.name }}
+                    </span>
+                  </div>
+                </a>
               </div>
-            </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
-              <img src="{% static 'school.png' %}"
-                   class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Школьная форма">
-              <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-black font-bold text-lg">Школьная форма</span>
-              </div>
-            </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
-              <img src="{% static 'medicine.png' %}"
-                   class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Медицинская одежда">
-              <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-gray-900 font-bold text-lg">Медицинская одежда</span>
-              </div>
-            </div>
-            <div class="relative group h-48 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-blue-600">
-              <img src="{% static 'sport.png' %}"
-                   class="w-full h-full object-cover transform group-hover:scale-105 transition-transform"
-                   alt="Спортивная одежда">
-              <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <span class="text-white font-bold text-lg">Спортивная одежда</span>
-              </div>
-            </div>
+            {% endfor %}
+          </div>
           </div>
         </div>
       </div>
@@ -76,40 +60,6 @@
             <p class="text-gray-600">Сертифицированные ткани и безопасные красители</p>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Collections Section -->
-    <section id="collections" class="mb-20">
-      <h2 class="text-3xl font-bold text-center mb-12">Коллекции</h2>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4">
-        {% for category in categories %}
-        <!-- Category Card -->
-        <div class="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
-          <div class="relative overflow-hidden">
-            <!-- Category Image -->
-            <img src="{{ category.image.url }}" alt="{{ category.name }}"
-                 class="w-full h-64 object-cover transform group-hover:scale-105 transition duration-300">
-            <!-- Hover Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900 opacity-0 group-hover:opacity-30 transition duration-300"></div>
-          </div>
-          <div class="p-6">
-            <h3 class="text-2xl font-semibold mb-2">{{ category.name }}</h3>
-            <!-- Replace '#' with your category detail URL or route -->
-            <a href="{% url 'category_detail' category.slug %}"
-               class="inline-flex items-center px-5 py-2.5 text-sm font-medium bg-blue-600 text-white
-                      rounded-lg hover:bg-blue-700 transition duration-300 group">
-              Посмотреть коллекцию
-              <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-              </svg>
-            </a>
-          </div>
-        </div>
-        {% endfor %}
       </div>
     </section>
 

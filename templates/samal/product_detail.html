@@ -11,8 +11,6 @@
             <li><a href="{% url 'category' %}" class="text-gray-500 hover:text-gray-700">Каталог</a></li>
             <li>/</li>
             <li><a href="{% url 'category_detail' category.slug %}" class="text-gray-500 hover:text-gray-700">{{ product.category.name }}</a></li>
-            <li>/</li>
-            <li class="text-gray-700 font-medium">{{ product.name }}</li>
         </ol>
     </nav>
 
@@ -20,15 +18,22 @@
     <div class="container mx-auto px-4 py-8">
         <div class="lg:grid lg:grid-cols-2 lg:gap-12">
             <!-- Product Images -->
-            <div class="mb-8 lg:mb-0">
-                <!-- Main Image -->
-                <div class="aspect-square bg-white rounded-xl shadow-lg overflow-hidden mb-4">
-                    <img id="main-image" 
-                         src="{{ product.image.url }}" 
-                         alt="{{ product.name }}" 
-                         class="w-auto h-[300px] object-contain p-6 cursor-zoom-in">
+            {% if product_images %}
+                <div class="mt-4">
+                    <!-- Main Image Display -->
+                    <div id="main-image" class="bg-white rounded-xl shadow-lg overflow-hidden h-100 flex items-center justify-center">
+                        <img src="{{ product_images.0.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                    </div>
+                    <!-- Thumbnails -->
+                    <div class="mt-4 grid grid-cols-4 gap-4">
+                        {% for image in product_images %}
+                            <div class="cursor-pointer border rounded-md p-1" onclick="document.getElementById('main-image').querySelector('img').src='{{ image.image.url }}'">
+                                <img src="{{ image.image.url }}" alt="{{ product.name }}" class="w-full h-20 object-cover">
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
 
             <!-- Product Details -->
             <div class="space-y-6">
@@ -36,28 +41,14 @@
                 <div class="border-b pb-6">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ product.name }}</h1>
                     <div class="flex items-center space-x-4">
-                        <span class="text-2xl font-bold text-blue-600">{{ product.price }} ₽</span>
-                        {% if product.old_price %}
-                        <span class="text-gray-400 line-through">{{ product.old_price }} ₽</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Size Selector -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold">Размер:</h3>
-                    <div class="grid grid-cols-4 gap-2">
-                        <button class="aspect-square border rounded-md">S</button>
-                        <button class="aspect-square border rounded-md">M</button>
-                        <button class="aspect-square border rounded-md">L</button>
-                        <button class="aspect-square border rounded-md">XL</button>
+                        <span class="text-2xl font-bold text-blue-600">{{ product.price }} ₸</span>
                     </div>
                 </div>
 
                 <!-- Product Description (placed under sizes) -->
                 <div class="mt-8">
                     <div class="prose max-w-none">
-                        {{ product.description|safe }}
+                        <p style="white-space: pre-wrap;">{{ product.description }}</p>
                     </div>
                 </div>
             </div>

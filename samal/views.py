@@ -1,5 +1,5 @@
 from django.shortcuts import get_list_or_404, redirect, render, get_object_or_404
-from samal.models import Product, Category
+from samal.models import Product, Category, ProductImage
 from samal.forms import ContactForm
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -68,10 +68,12 @@ def category_detail(request, slug):
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
     category = get_object_or_404(Category, slug=product.category.slug)
+    product_images = product.product_images.all()
 
     context = {
         'product': product,
-        'category': category
+        'category': category,
+        'product_images': product_images
     }
 
     return render(request, 'samal/product_detail.html', context)
