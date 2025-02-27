@@ -54,21 +54,9 @@
                     <span class="text-3xl font-bold text-blue-600">{{ product.price }} ₸</span>
                 </div>
 
-                <!-- Минимальная сумма заказа -->
-                <div class="mb-4 pl-4 border-l-4 border-orange-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">Минимальная сумма заказа на сайте</p>
-                            <p class="text-xl font-bold text-orange-600 mt-1">5 000 ₸</p>
-                        </div>
-                        <svg class="w-6 h-6 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-
                 <!-- Collapsible Wholesale Price -->
-                <div class="mb-6">
+                {% if product.wholesale_price %}
+                <div class="mb-4">
                     <button class="flex justify-between items-center w-full group" data-toggle="wholesale-prices">
                         <div class="border-l-4 border-blue-100 pl-4">
                             <span class="text-gray-600">Показать оптовые цены</span>
@@ -79,8 +67,66 @@
                     </button>
                     <div id="wholesale-prices" class="pl-4 mt-2">
                         <span class="text-lg font-semibold text-blue-600">
-                            2750 ₸/шт при заказе от 100 шт
+                            {{ product.wholesale_price }} ₸/{{ product.get_unit_display }} при заказе от 100 {{ product.get_unit_display }}
                         </span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Статус наличия и тип продажи -->
+                <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
+                    <div class="flex items-start gap-4 ">
+                        <!-- Icon Container -->
+                        <div class="shrink-0 mt-0.5">
+                            {% if product.availability == 'in_stock' %}
+                            {% endif %}
+                          </div>                          
+                
+                        <!-- Content -->
+                        <div class="flex-1">
+                            <!-- Availability -->
+                            <div class="mb-3">
+                                <h3 class="text-base font-semibold {% if product.availability == 'in_stock' %}text-emerald-800{% else %}text-amber-800{% endif %}">
+                                    {{ product.get_availability_display }}
+                                </h3>
+                                {% if product.availability == 'on_order' %}
+                                <p class="mt-1 text-sm {% if product.availability == 'in_stock' %}text-emerald-700{% else %}text-amber-700{% endif %}">
+                                    <span class="font-medium">Срок поставки:</span> 
+                                    {{ product.expected_delivery|default:"3-5 рабочих дней" }}
+                                </p>
+                                {% endif %}
+                            </div>
+                
+                            <!-- Sales Type -->
+                            <div class="flex items-center gap-3 pt-3 border-t border-dashed {% if product.availability == 'in_stock' %}border-emerald-100{% else %}border-amber-100{% endif %}">
+                                <svg class="w-5 h-5 text-gray-600 shrink-0" 
+                                     fill="none" 
+                                     stroke="currentColor" 
+                                     stroke-width="1.5"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" 
+                                          stroke-linejoin="round" 
+                                          d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
+                                </svg>
+                                <span class="text-sm font-medium text-gray-700">
+                                    Доступно для заказа: 
+                                    <span class="text-blue-600">оптом и в розницу</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Минимальная сумма заказа -->
+                <div class="mb-4 pl-4 border-l-4 border-orange-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Минимальная сумма заказа на сайте</p>
+                            <p class="text-xl font-bold text-orange-600 mt-1">5 000 ₸</p>
+                        </div>
+                        <svg class="w-6 h-6 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
                     </div>
                 </div>
 

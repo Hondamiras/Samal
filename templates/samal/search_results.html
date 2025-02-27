@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Результаты поиска{% endblock %}
+
+{% block content %}
+    <!-- Hero Section with Search -->
+    <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-16 mb-12">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                Результаты поиска
+            </h1>
+            
+            <!-- Search Form -->
+            <form method="GET" action="{% url 'search' %}" class="max-w-2xl mx-auto">
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <input type="text" 
+                           name="q" 
+                           placeholder="Поиск по товарам..." 
+                           class="flex-1 px-6 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                           value="{{ request.GET.q }}">
+                    <button type="submit" 
+                            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                        Найти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <div class="container mx-auto px-6 mb-16">
+        {% if query == "" %}
+            <!-- Empty Query Message -->
+            <div class="text-center py-12">
+                <div class="mb-8 text-gray-500">
+                    <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4">Введите поисковый запрос</h3>
+                <p class="text-gray-600 mb-8">Начните поиск, введя ключевые слова в поле выше</p>
+                <a href="{% url 'category' %}" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Вернуться в каталог
+                </a>
+            </div>
+        {% elif products %}
+            <!-- Results Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {% for product in products %}
+                    <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
+                        <a href="{% url 'product_detail' product.slug %}" class="block overflow-hidden rounded-t-xl">
+                            <!-- aspect-square keeps the container perfectly square -->
+                            <div class="relative h-80 overflow-hidden">
+                                <img src="{{ product.image.url }}" 
+                                     alt="{{ product.name }}"
+                                     class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
+                            </div>
+                        </a>
+                        <div class="p-5">
+                            <h3 class="font-semibold text-gray-900 text-lg mb-2">
+                                <a href="{% url 'product_detail' product.slug %}" 
+                                   class="hover:text-blue-600 transition-colors">
+                                    {{ product.name }}
+                                </a>
+                            </h3>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-blue-600">
+                                    {{ product.price }} ₸
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="mt-12 flex justify-center items-center gap-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}" 
+                       class="px-4 py-2 border rounded-lg hover:bg-blue-600 hover:text-white transition-colors">
+                        ←
+                    </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}&q={{ query }}" 
+                           class="px-4 py-2 border rounded-lg hover:bg-blue-600 hover:text-white transition-colors">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&q={{ query }}" 
+                       class="px-4 py-2 border rounded-lg hover:bg-blue-600 hover:text-white transition-colors">
+                        →
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- No Results Message -->
+            <div class="text-center py-12">
+                <div class="mb-8 text-gray-500">
+                    <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4">Ничего не найдено</h3>
+                <p class="text-gray-600 mb-8">Попробуйте изменить поисковый запрос</p>
+                <div class="flex justify-center gap-4">
+                    <a href="{% url 'search' %}?q=" class="px-6 py-2.5 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors">
+                        Сбросить поиск
+                    </a>
+                    <a href="{% url 'category' %}" class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                        Весь каталог
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

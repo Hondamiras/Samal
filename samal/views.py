@@ -4,6 +4,8 @@ from samal.forms import ContactForm
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 # Create your views here.
 def home(request):
@@ -25,7 +27,27 @@ def category(request):
 
     return render(request, 'samal/category.html', context)
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+def product_search(request):
+    query = request.GET.get('q', '').strip()
+    products_list = Product.objects.all()
+    
+    if query:
+        products_list = products_list.filter(
+            Q(name__icontains=query) | 
+            Q(description__icontains=query)
+        ).distinct()
+
+    # Пагинация
+    paginator = Paginator(products_list, 6)  # укажите нужное количество товаров на страницу
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'products': page_obj.object_list,
+        'query': query,
+        'page_obj': page_obj,
+    }
+    return render(request, 'samal/search_results.html', context)
 
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
@@ -47,7 +69,7 @@ def category_detail(request, slug):
     # Если никакая сортировка не выбрана, оставляем порядок по умолчанию (например, по id)
 
     # Пагинация
-    paginator = Paginator(products_list, 3)  # укажите нужное количество товаров на страницу
+    paginator = Paginator(products_list, 6)  # укажите нужное количество товаров на страницу
     page = request.GET.get('page')
 
     try:
