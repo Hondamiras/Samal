@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center sm:text-left">Ваша корзина</h1>
+
+    {% if cart_items %}
+    <!-- Cart Container -->
+    <div id="cart-container" class="bg-white shadow-lg rounded-xl overflow-hidden divide-y divide-gray-100">
+        {% for item in cart_items %}
+        <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center hover:bg-gray-50 transition-colors duration-200" data-item-id="{{ item.id }}">
+            <!-- Product Image -->
+            <div class="w-full sm:w-32 h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
+                     class="w-full h-full object-cover object-center transform transition-transform duration-200 hover:scale-105">
+            </div>
+
+            <!-- Product Info -->
+            <div class="flex-1 min-w-0 space-y-2">
+                <a href="{% url 'product_detail' item.product.slug %}"
+                   class="block text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-700 truncate">
+                    {{ item.product.name }}
+                </a>
+
+                <!-- Quantity Controls & Price -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <!-- Quantity Controls -->
+                    <div class="flex items-center border border-gray-200 rounded-xl bg-white shadow-sm">
+                        <button class="minus-btn px-4 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-xl"
+                                data-item-id="{{ item.id }}">
+                            −
+                        </button>
+                        <input type="number"
+                               value="{{ item.quantity }}"
+                               data-current-quantity="{{ item.quantity }}"
+                               data-item-id="{{ item.id }}"
+                               class="quantity-input w-16 text-center border-x border-gray-200 bg-transparent py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="plus-btn px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-r-xl"
+                                data-item-id="{{ item.id }}">
+                            +
+                        </button>
+                    </div>
+
+                    <!-- Price per unit (wholesale vs. regular) -->
+                    <div class="text-sm price-per-unit">
+                        {% if item.quantity >= 100 and item.product.wholesale_price %}
+                            <span class="line-through text-gray-400">{{ item.product.price }} ₸</span>
+                            <span class="text-green-600 font-medium">
+                                {{ item.product.wholesale_price }} ₸/шт
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
+                            </span>
+                        {% else %}
+                            <span class="text-gray-600">{{ item.product.price }} ₸/шт</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remove Button -->
+            <button class="remove-btn mt-2 sm:mt-0 text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50"
+                    data-item-id="{{ item.id }}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+
+        <!-- Cart Total -->
+        <div class="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="flex justify-between items-center">
+                <span class="text-lg sm:text-xl font-semibold text-gray-800">К оплате без доставки:</span>
+                <span id="cart-total" class="text-xl sm:text-2xl font-bold text-blue-800">{{ cart.total_price }} ₸</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Actions -->
+    <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <a href="{% url 'category' %}"
+           class="px-6 py-3 text-center border-2 border-gray-200 rounded-xl hover:border-blue-500 text-gray-700 hover:text-blue-700 transition-all duration-200 font-medium">
+            ← Продолжить покупки
+        </a>
+        <button id="clear-cart-btn"
+                class="px-6 py-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors duration-200 font-medium flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span>Очистить корзину</span>
+        </button>
+        <a href="#"
+           class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
+            Оформить заказ →
+        </a>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="text-center py-16 space-y-6">
+        <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+            <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+        </div>
+        <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
+        <a href="{% url 'category' %}"
+           class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
+            Перейти в каталог
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Inline CSS for the .price-change animation -->
+<style>
+.price-change {
+    transition: transform 0.3s ease;
+    transform: scale(1.05);
+}
+</style>
+
+<!-- jQuery (if not already included in base.html) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+
+    // Helper: format price to "2823,00 ₸"
+    function formatPrice(price) {
+        // Convert price to float, format to two decimals, replace '.' with ','
+        let formatted = parseFloat(price).toFixed(2).replace('.', ',');
+        return formatted + ' ₸';
+    }
+
+    // Update the displayed cart total
+    function updateCartTotal(newTotal) {
+        $("#cart-total").text(formatPrice(newTotal));
+    }
+
+    // Update a single row (quantity, item total, and price display)
+    function updateRow(itemId, newQuantity, newItemTotal, response) {
+        var row = $("[data-item-id='" + itemId + "']");
+
+        // 1) Update quantity input
+        row.find(".quantity-input").val(newQuantity).data("current-quantity", newQuantity);
+
+        // 2) Update the item total text
+        //    (If you display total per item somewhere, for example, row.find(".item-total").text(...))
+        //    But if you only show per-unit price, comment this out or adapt as needed:
+        // row.find(".item-total").text(formatPrice(newItemTotal));
+
+        // 3) Update the per-unit price display (wholesale vs. regular)
+        var priceContainer = row.find(".price-per-unit");
+        if (response.is_wholesale) {
+            // Now wholesale
+            priceContainer.html(`
+                <span class="line-through text-gray-400">${response.regular_price} ₸</span>
+                <span class="text-green-600 font-medium">
+                    ${response.wholesale_price} ₸/шт
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
+                </span>
+            `);
+        } else {
+            // Regular price
+            priceContainer.html(`
+                <span class="text-gray-600">${response.regular_price} ₸/шт</span>
+            `);
+        }
+
+        // 4) Brief "pop" animation
+        priceContainer.addClass('price-change');
+        setTimeout(() => priceContainer.removeClass('price-change'), 300);
+    }
+
+    // 1) Decrease quantity
+    $(".minus-btn").on("click", function(e) {
+        e.preventDefault();
+        var itemId = $(this).data("item-id");
+        $.ajax({
+            url: "{% url 'update_cart_quantity' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                item_id: itemId,
+                action: "minus"
+            },
+            success: function(response) {
+                if (response.success) {
+                    if (response.quantity === 0) {
+                        // If quantity is zero, remove the item row entirely
+                        $("[data-item-id='" + itemId + "']").remove();
+                    } else {
+                        updateRow(itemId, response.quantity, response.item_total, response);
+                    }
+                    updateCartTotal(response.cart_total);
+                }
+            },
+            error: function(xhr) {
+                console.error("Ошибка при уменьшении количества: " + xhr.responseText);
+            }
+        });
+    });
+
+    // 2) Increase quantity
+    $(".plus-btn").on("click", function(e) {
+        e.preventDefault();
+        var itemId = $(this).data("item-id");
+        $.ajax({
+            url: "{% url 'update_cart_quantity' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                item_id: itemId,
+                action: "plus"
+            },
+            success: function(response) {
+                if (response.success) {
+                    updateRow(itemId, response.quantity, response.item_total, response);
+                    updateCartTotal(response.cart_total);
+                }
+            },
+            error: function(xhr) {
+                console.error("Ошибка при увеличении количества: " + xhr.responseText);
+            }
+        });
+    });
+
+    // 3) Manually set quantity (input change)
+    $(".quantity-input").on("change", function(e) {
+        var $input = $(this);
+        var itemId = $input.data("item-id");
+        var newQuantity = parseInt($input.val());
+        if (isNaN(newQuantity) || newQuantity < 1) {
+            // Reset to the previous valid value if invalid
+            $input.val($input.data("current-quantity"));
+            return;
+        }
+        $.ajax({
+            url: "{% url 'update_cart_quantity' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                item_id: itemId,
+                action: "set",
+                quantity: newQuantity
+            },
+            success: function(response) {
+                if (response.success) {
+                    updateRow(itemId, response.quantity, response.item_total, response);
+                    updateCartTotal(response.cart_total);
+                }
+            },
+            error: function(xhr) {
+                console.error("Ошибка при изменении количества: " + xhr.responseText);
+            }
+        });
+    });
+
+    // 4) Remove a single item
+    $(".remove-btn").on("click", function(e) {
+        e.preventDefault();
+        var itemId = $(this).data("item-id");
+        $.ajax({
+            url: "{% url 'remove_cart_item_ajax' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                item_id: itemId
+            },
+            success: function(response) {
+                if (response.success) {
+                    $("[data-item-id='" + itemId + "']").remove();
+                    updateCartTotal(response.cart_total);
+                }
+            },
+            error: function(xhr) {
+                console.error("Ошибка при удалении товара: " + xhr.responseText);
+            }
+        });
+    });
+
+    // 5) Clear the entire cart
+    $("#clear-cart-btn").on("click", function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: "{% url 'clear_cart' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $("#cart-container").empty();
+                    updateCartTotal("0");
+                }
+            },
+            error: function(xhr) {
+                console.error("Ошибка при очистке корзины: " + xhr.responseText);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

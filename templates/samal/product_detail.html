@@ -37,7 +37,7 @@
                 </div>
                 <div class="mt-4 grid grid-cols-4 gap-2 sm:gap-4">
                     {% for image in product_images %}
-                    <button onclick="changeMainImage('{{ image.image.url }}')" 
+                    <button onclick="changeMainImage(event, '{{ image.image.url }}')" 
                             class="aspect-square border-2 rounded-lg overflow-hidden transition-all hover:border-blue-500 {% if forloop.first %}border-blue-500{% else %}border-gray-200{% endif %}">
                         <img src="{{ image.image.url }}" 
                              alt="{{ product.name }}" 
@@ -50,11 +50,13 @@
             <!-- Product Details -->
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ product.name }}</h1>
+                
+                <!-- Price and Like -->
                 <div class="flex items-baseline gap-4 mb-6">
                     <span class="text-3xl font-bold text-blue-600">{{ product.price }} ₸</span>
                 </div>
-
-                <!-- Collapsible Wholesale Price -->
+                
+                <!-- Оптовые цены (если есть) -->
                 {% if product.wholesale_price %}
                 <div class="mb-4">
                     <button class="flex justify-between items-center w-full group" data-toggle="wholesale-prices">
@@ -72,19 +74,16 @@
                     </div>
                 </div>
                 {% endif %}
-
+                
                 <!-- Статус наличия и тип продажи -->
                 <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
-                    <div class="flex items-start gap-4 ">
-                        <!-- Icon Container -->
+                    <div class="flex items-start gap-4">
                         <div class="shrink-0 mt-0.5">
                             {% if product.availability == 'in_stock' %}
+                            <!-- Icon if needed -->
                             {% endif %}
-                          </div>                          
-                
-                        <!-- Content -->
+                        </div>
                         <div class="flex-1">
-                            <!-- Availability -->
                             <div class="mb-3">
                                 <h3 class="text-base font-semibold {% if product.availability == 'in_stock' %}text-emerald-800{% else %}text-amber-800{% endif %}">
                                     {{ product.get_availability_display }}
@@ -96,25 +95,21 @@
                                 </p>
                                 {% endif %}
                             </div>
-                
-                            <!-- Sales Type -->
                             <div class="flex items-center gap-2 pt-3 border-t border-dashed {% if product.availability == 'in_stock' %}border-emerald-100{% else %}border-amber-100{% endif %}">
                                 <svg class="w-5 h-5 text-gray-600 shrink-0" 
                                      fill="none" 
                                      stroke="currentColor" 
                                      stroke-width="1.5"
                                      viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" 
-                                          stroke-linejoin="round" 
+                                    <path stroke-linecap="round" stroke-linejoin="round" 
                                           d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
                                 </svg>
-                                
                                 <span class="text-blue-600">оптом и в розницу</span>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Минимальная сумма заказа -->
                 <div class="mb-4 pl-4 border-l-4 border-orange-200">
                     <div class="flex items-center justify-between">
@@ -124,10 +119,43 @@
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Product Description -->
                 <div class="prose max-w-none text-gray-700 mb-8">
                     <div class="space-y-4">
                         {{ product.description|linebreaksbr }}
+                    </div>
+                </div>
+                
+                <!-- Измененный блок с кнопками -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <!-- Кнопка добавления в корзину с AJAX -->
+                    <div class="flex-1">
+                        <button id="add-to-cart-ajax" data-slug="{{ product.slug }}"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl 
+                                       font-medium text-lg transition-colors duration-300 flex items-center justify-center">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Добавить в корзину
+                        </button>
+                        <!-- Cart message placeholder -->
+                        <div id="cart-message" class="mt-2 text-green-600"></div>
+                    </div>
+
+                    <!-- Кнопка лайка (AJAX) -->
+                    <div class="flex-1">
+                        <button id="toggle-like-ajax" data-slug="{{ product.slug }}"
+                                class="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-4 px-6 rounded-xl 
+                                       font-medium text-lg transition-colors duration-300 flex items-center justify-center">
+                            <svg id="like-icon" class="w-6 h-6 mr-2" fill="{% if liked %}currentColor{% else %}none{% endif %}" 
+                                 stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <span id="like-text">{% if liked %}В избранном{% else %}В избранное{% endif %}</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -142,7 +170,7 @@
                     <section>
                         <button class="flex justify-between items-center w-full group" data-toggle="return-policy">
                             <h2 class="text-xl font-bold">Условия возврата</h2>
-                            <svg class="w-6 h-6 transform transition-transform" :class="{ 'rotate-180': isOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -242,16 +270,16 @@
                             <div class="space-y-2 mt-5">
                                 <p class="font-medium">СНГ</p>
                                 <ul class="space-y-1 text-gray-600">
-                                    <p>Азербайджан, все регионы</p>
-                                    <p>Армения, все регионы</p>
-                                    <p>Беларусь, все регионы</p>
-                                    <p>Грузия, все регионы</p>
-                                    <p>Молдова, все регионы</p>
-                                    <p>Россия, все регионы</p>
-                                    <p>Таджикистан, все регионы</p>
-                                    <p>Туркменистан, все регионы</p>
-                                    <p>Узбекистан, все регионы</p>
-                                    <p>Украина, все регионы</p>
+                                    <li>Азербайджан, все регионы</li>
+                                    <li>Армения, все регионы</li>
+                                    <li>Беларусь, все регионы</li>
+                                    <li>Грузия, все регионы</li>
+                                    <li>Молдова, все регионы</li>
+                                    <li>Россия, все регионы</li>
+                                    <li>Таджикистан, все регионы</li>
+                                    <li>Туркменистан, все регионы</li>
+                                    <li>Узбекистан, все регионы</li>
+                                    <li>Украина, все регионы</li>
                                 </ul>
                             </div>
                         </div>
@@ -316,7 +344,7 @@
 </div>
 
 <script>
-function changeMainImage(url) {
+function changeMainImage(e, url) {
     const mainImg = document.getElementById('main-image');
     mainImg.style.opacity = '0';
     setTimeout(() => {
@@ -329,8 +357,62 @@ function changeMainImage(url) {
         btn.classList.remove('border-blue-500');
         btn.classList.add('border-gray-200');
     });
-    event.currentTarget.classList.add('border-blue-500');
-    event.currentTarget.classList.remove('border-gray-200');
+    e.currentTarget.classList.add('border-blue-500');
+    e.currentTarget.classList.remove('border-gray-200');
 }
+</script>
+
+<!-- jQuery for AJAX calls (if not already included in base.html) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // AJAX for Add to Cart
+    $("#add-to-cart-ajax").on("click", function(e) {
+        e.preventDefault();
+        var productSlug = $(this).data("slug");
+        var url = "{% url 'add_to_cart' product.slug %}";
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $("#cart-message").html(response.message + " (Количество: " + response.quantity + ")");
+            },
+            error: function(xhr, status, error) {
+                $("#cart-message").html("Ошибка: " + error);
+            }
+        });
+    });
+
+    // AJAX for Toggle Like
+    $("#toggle-like-ajax").on("click", function(e) {
+        e.preventDefault();
+        var productSlug = $(this).data("slug");
+        var url = "{% url 'toggle_like' product.slug %}";
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if(response.success) {
+                    if(response.liked) {
+                        $("#like-text").text("В избранном");
+                        $("#like-icon").attr("fill", "currentColor");
+                    } else {
+                        $("#like-text").text("В избранное");
+                        $("#like-icon").attr("fill", "none");
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Ошибка: " + error);
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

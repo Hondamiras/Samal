@@ -67,3 +67,59 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = 'Изображение продукта'
         verbose_name_plural = 'Изображения продуктов'
+
+class Like(models.Model):
+    session_key = models.CharField(max_length=40, verbose_name="Идентификатор сессии")
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, verbose_name="Продукт")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата лайка")
+
+    def __str__(self):
+        return f"Лайк для {self.product.name} с сессией {self.session_key}"
+    
+    class Meta:
+        verbose_name = 'Лайк'
+        verbose_name_plural = 'Лайки'
+        unique_together = ('session_key', 'product')
+
+
+class Cart(models.Model):
+    session_key = models.CharField(max_length=40, unique=True, verbose_name="Идентификатор сессии")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    def __str__(self):
+        return f"Корзина с сессией {self.session_key}"
+    
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+    @property
+    def total_price(self):
+        # Sum the CartItem `total_price` property
+        return sum(item.total_price for item in self.items.all())
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, verbose_name="Корзина", related_name="items")
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, verbose_name="Продукт")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
+
+    def __str__(self):
+        return f"{self.product.name} ({self.quantity})"
+    
+    class Meta:
+        verbose_name = 'Товар в корзине'
+        verbose_name_plural = 'Товары в корзинах'
+        unique_together = ('cart', 'product')
+
+    @property
+    def price_to_use(self):
+        """Use wholesale price if quantity ≥ 100, otherwise regular price."""
+        if self.quantity >= 100 and self.product.wholesale_price is not None:
+            return self.product.wholesale_price
+        return self.product.price or 0
+
+    @property
+    def total_price(self):
+        return self.price_to_use * self.quantity
