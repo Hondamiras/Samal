@@ -20,7 +20,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', blank=True, null=True)
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Оптовая цена', blank=True, null=True)
     UNIT_CHOICES = [
-        ('pcs', 'шт.'),
+        ('pcs', 'шт'),
         ('kg', 'кг'),
     ]
     unit = models.CharField(

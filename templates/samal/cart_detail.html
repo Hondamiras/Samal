@@ -3,69 +3,94 @@
 
 {% block content %}
 <div class="max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center sm:text-left">Ваша корзина</h1>
-
     {% if cart_items %}
     <!-- Cart Container -->
     <div id="cart-container" class="bg-white shadow-lg rounded-xl overflow-hidden divide-y divide-gray-100">
         {% for item in cart_items %}
-        <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center hover:bg-gray-50 transition-colors duration-200" data-item-id="{{ item.id }}">
+        <div class="group flex flex-col gap-3 p-3 sm:p-5 md:flex-row" data-item-id="{{ item.id }}">
             <!-- Product Image -->
-            <div class="w-full sm:w-32 h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+            <a href="{% url 'product_detail' item.product.slug %}" 
+            class="w-full h-40 md:w-32 md:h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
-                     class="w-full h-full object-cover object-center transform transition-transform duration-200 hover:scale-105">
-            </div>
-
+                    class="w-full h-full object-cover object-center transform transition-transform duration-200 group-hover:scale-105">
+            </a>
+            
             <!-- Product Info -->
-            <div class="flex-1 min-w-0 space-y-2">
-                <a href="{% url 'product_detail' item.product.slug %}"
-                   class="block text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-700 truncate">
+            <div class="flex-1 flex flex-col justify-between w-full">
+                
+                <!-- Top row: Name + (Remove on mobile) -->
+                <div class="flex justify-between items-start">
+                    <a href="{% url 'product_detail' item.product.slug %}"
+                    class="text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-700 line-clamp-2">
                     {{ item.product.name }}
-                </a>
+                    </a>
+                    <!-- Remove Button - Mobile -->
+                    <button class="md:hidden p-1 text-red-500 hover:text-red-700 remove-btn" data-item-id="{{ item.id }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
 
-                <!-- Quantity Controls & Price -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <!-- Bottom row: Quantity + (Remove on desktop) -->
+                <div class="flex items-center justify-between gap-2 mt-3">
                     <!-- Quantity Controls -->
-                    <div class="flex items-center border border-gray-200 rounded-xl bg-white shadow-sm">
-                        <button class="minus-btn px-4 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-xl"
+                    <div class="flex items-center border border-gray-200 rounded-lg bg-white shadow-sm">
+                        <button class="minus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-lg"
                                 data-item-id="{{ item.id }}">
                             −
                         </button>
                         <input type="number"
-                               value="{{ item.quantity }}"
-                               data-current-quantity="{{ item.quantity }}"
-                               data-item-id="{{ item.id }}"
-                               class="quantity-input w-16 text-center border-x border-gray-200 bg-transparent py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <button class="plus-btn px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-r-xl"
+                            value="{{ item.quantity }}"
+                            data-current-quantity="{{ item.quantity }}"
+                            data-item-id="{{ item.id }}"
+                            class="quantity-input w-14 text-center border-x border-gray-200 bg-transparent py-1 
+                                    focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="plus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-r-lg" 
                                 data-item-id="{{ item.id }}">
                             +
                         </button>
                     </div>
-
-                    <!-- Price per unit (wholesale vs. regular) -->
-                    <div class="text-sm price-per-unit">
-                        {% if item.quantity >= 100 and item.product.wholesale_price %}
+                    
+                    <!-- Remove Button - Desktop -->
+                    <button class="hidden md:flex items-center p-2 text-red-500 hover:text-red-700 remove-btn" 
+                            data-item-id="{{ item.id }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        <span class="ml-1 text-sm">Удалить</span>
+                    </button>
+                </div>
+                
+                <!-- Price Details -->
+                <div class="mt-2 flex flex-col items-end space-y-1">
+                    <!-- Unit Price -->
+                    {% if item.quantity >= 100 and item.product.wholesale_price %}
+                        <div class="flex flex-col sm:flex-row items-end gap-1">
                             <span class="line-through text-gray-400">{{ item.product.price }} ₸</span>
-                            <span class="text-green-600 font-medium">
-                                {{ item.product.wholesale_price }} ₸/шт
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
+                            <span class="text-green-600 font-medium flex items-center gap-1">
+                                {{ item.product.wholesale_price }} ₸/ {{ item.product.get_unit_display }}
+                                <span class="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">ОПТ</span>
                             </span>
-                        {% else %}
-                            <span class="text-gray-600">{{ item.product.price }} ₸/шт</span>
-                        {% endif %}
+                        </div>
+                    {% else %}
+                        <span class="text-gray-600">
+                            {{ item.product.price }} ₸/{{ item.product.get_unit_display }}
+                        </span>
+                    {% endif %}
+                    
+                    <!-- Total Price -->
+                    <div class="text-base font-semibold text-gray-900 item-total-value">
+                        {{ item.total_price }} ₸
                     </div>
                 </div>
+            
             </div>
-
-            <!-- Remove Button -->
-            <button class="remove-btn mt-2 sm:mt-0 text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50"
-                    data-item-id="{{ item.id }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
         </div>
         {% endfor %}
+
 
         <!-- Cart Total -->
         <div class="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -76,6 +101,7 @@
         </div>
     </div>
 
+    <div id="order-message" class="text-red-600 text-center mt-5" style="display:none;"></div>
     <!-- Cart Actions -->
     <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <a href="{% url 'category' %}"
@@ -89,12 +115,11 @@
             </svg>
             <span>Очистить корзину</span>
         </button>
-        <a href="#"
+        <a href="{% url 'order' %}" id="order-link"
            class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
             Оформить заказ →
         </a>
     </div>
-
     {% else %}
     <!-- Empty Cart -->
     <div class="text-center py-16 space-y-6">
@@ -121,185 +146,249 @@
 }
 </style>
 
-<!-- jQuery (if not already included in base.html) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token }}';
 
-    // Helper: format price to "2823,00 ₸"
+    // Функция форматирования цены в формат "2823,00 ₸"
     function formatPrice(price) {
-        // Convert price to float, format to two decimals, replace '.' with ','
         let formatted = parseFloat(price).toFixed(2).replace('.', ',');
         return formatted + ' ₸';
     }
 
-    // Update the displayed cart total
+    // Обновление отображаемой общей суммы в элементе с id "cart-total"
     function updateCartTotal(newTotal) {
-        $("#cart-total").text(formatPrice(newTotal));
+        const cartTotalEl = document.getElementById('cart-total');
+        if (cartTotalEl) {
+            cartTotalEl.textContent = formatPrice(newTotal);
+        }
     }
 
-    // Update a single row (quantity, item total, and price display)
+    // Функция обновления данных одной строки товара (количество, отображение цены)
     function updateRow(itemId, newQuantity, newItemTotal, response) {
-        var row = $("[data-item-id='" + itemId + "']");
+        const row = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (!row) return;
 
-        // 1) Update quantity input
-        row.find(".quantity-input").val(newQuantity).data("current-quantity", newQuantity);
-
-        // 2) Update the item total text
-        //    (If you display total per item somewhere, for example, row.find(".item-total").text(...))
-        //    But if you only show per-unit price, comment this out or adapt as needed:
-        // row.find(".item-total").text(formatPrice(newItemTotal));
-
-        // 3) Update the per-unit price display (wholesale vs. regular)
-        var priceContainer = row.find(".price-per-unit");
-        if (response.is_wholesale) {
-            // Now wholesale
-            priceContainer.html(`
-                <span class="line-through text-gray-400">${response.regular_price} ₸</span>
-                <span class="text-green-600 font-medium">
-                    ${response.wholesale_price} ₸/шт
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
-                </span>
-            `);
-        } else {
-            // Regular price
-            priceContainer.html(`
-                <span class="text-gray-600">${response.regular_price} ₸/шт</span>
-            `);
+        // 1) Обновляем количество
+        const quantityInput = row.querySelector('.quantity-input');
+        if (quantityInput) {
+            quantityInput.value = newQuantity;
+            quantityInput.dataset.currentQuantity = newQuantity;
         }
 
-        // 4) Brief "pop" animation
-        priceContainer.addClass('price-change');
-        setTimeout(() => priceContainer.removeClass('price-change'), 300);
+        const priceContainer = row.querySelector('.price-per-unit');
+        if (priceContainer) {
+            // Подготовим форматированные цены
+            const formattedRegular = formatPrice(response.regular_price);
+            const formattedWholesale = response.wholesale_price
+                ? formatPrice(response.wholesale_price)
+                : null;
+
+            if (response.is_wholesale && formattedWholesale) {
+                priceContainer.innerHTML = `
+                    <span class="line-through text-gray-400">${formattedRegular}</span>
+                    <span class="text-green-600 font-medium">
+                        ${formattedWholesale}/шт
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
+                    </span>
+                `;
+            } else {
+                priceContainer.innerHTML = `
+                    <span class="text-gray-600">${formattedRegular}/шт</span>
+                `;
+            }
+            // Кратковременная анимация
+            priceContainer.classList.add('price-change');
+            setTimeout(() => {
+                priceContainer.classList.remove('price-change');
+            }, 300);
+        }
+
+        const itemTotalEl = row.querySelector('.item-total-value');
+        if (itemTotalEl) {
+            let formattedItemTotal = parseFloat(response.item_total)
+                .toFixed(2)
+                .replace('.', ',');
+            itemTotalEl.textContent = `${formattedItemTotal} ₸`;
+        }
+
+    }   
+    
+    // Вспомогательная функция для отправки POST-запросов с использованием Fetch API
+    function postData(url, data) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(data)
+        })
+        .then(response => response.json());
     }
 
-    // 1) Decrease quantity
-    $(".minus-btn").on("click", function(e) {
-        e.preventDefault();
-        var itemId = $(this).data("item-id");
-        $.ajax({
-            url: "{% url 'update_cart_quantity' %}",
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
+    // Обработка кнопки "уменьшить" количество товара
+    document.querySelectorAll('.minus-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            postData("{% url 'update_cart_quantity' %}", {
+                csrfmiddlewaretoken: csrfToken,
                 item_id: itemId,
-                action: "minus"
-            },
-            success: function(response) {
+                action: 'minus'
+            })
+            .then(response => {
                 if (response.success) {
                     if (response.quantity === 0) {
-                        // If quantity is zero, remove the item row entirely
-                        $("[data-item-id='" + itemId + "']").remove();
+                        // Если количество стало 0, удаляем строку товара
+                        const row = document.querySelector(`[data-item-id="${itemId}"]`);
+                        if (row) {
+                            row.remove();
+                        }
                     } else {
                         updateRow(itemId, response.quantity, response.item_total, response);
                     }
                     updateCartTotal(response.cart_total);
                 }
-            },
-            error: function(xhr) {
-                console.error("Ошибка при уменьшении количества: " + xhr.responseText);
-            }
+            })
+            .catch(error => {
+                console.error("Ошибка при уменьшении количества: ", error);
+            });
         });
     });
 
-    // 2) Increase quantity
-    $(".plus-btn").on("click", function(e) {
-        e.preventDefault();
-        var itemId = $(this).data("item-id");
-        $.ajax({
-            url: "{% url 'update_cart_quantity' %}",
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
+    // Обработка кнопки "увеличить" количество товара
+    document.querySelectorAll('.plus-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            postData("{% url 'update_cart_quantity' %}", {
+                csrfmiddlewaretoken: csrfToken,
                 item_id: itemId,
-                action: "plus"
-            },
-            success: function(response) {
+                action: 'plus'
+            })
+            .then(response => {
                 if (response.success) {
                     updateRow(itemId, response.quantity, response.item_total, response);
                     updateCartTotal(response.cart_total);
                 }
-            },
-            error: function(xhr) {
-                console.error("Ошибка при увеличении количества: " + xhr.responseText);
-            }
+            })
+            .catch(error => {
+                console.error("Ошибка при увеличении количества: ", error);
+            });
         });
     });
 
-    // 3) Manually set quantity (input change)
-    $(".quantity-input").on("change", function(e) {
-        var $input = $(this);
-        var itemId = $input.data("item-id");
-        var newQuantity = parseInt($input.val());
-        if (isNaN(newQuantity) || newQuantity < 1) {
-            // Reset to the previous valid value if invalid
-            $input.val($input.data("current-quantity"));
-            return;
-        }
-        $.ajax({
-            url: "{% url 'update_cart_quantity' %}",
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
+    // Обработка изменения количества вручную (input)
+    document.querySelectorAll('.quantity-input').forEach(function(input) {
+        input.addEventListener('change', function(e) {
+            const itemId = this.dataset.itemId;
+            let newQuantity = parseInt(this.value);
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                // Если значение некорректно, сбрасываем на предыдущее значение
+                this.value = this.dataset.currentQuantity;
+                return;
+            }
+            postData("{% url 'update_cart_quantity' %}", {
+                csrfmiddlewaretoken: csrfToken,
                 item_id: itemId,
-                action: "set",
+                action: 'set',
                 quantity: newQuantity
-            },
-            success: function(response) {
+            })
+            .then(response => {
                 if (response.success) {
                     updateRow(itemId, response.quantity, response.item_total, response);
                     updateCartTotal(response.cart_total);
                 }
-            },
-            error: function(xhr) {
-                console.error("Ошибка при изменении количества: " + xhr.responseText);
-            }
+            })
+            .catch(error => {
+                console.error("Ошибка при изменении количества: ", error);
+            });
         });
     });
 
-    // 4) Remove a single item
-    $(".remove-btn").on("click", function(e) {
-        e.preventDefault();
-        var itemId = $(this).data("item-id");
-        $.ajax({
-            url: "{% url 'remove_cart_item_ajax' %}",
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
+    // Обработка удаления товара из корзины
+    document.querySelectorAll('.remove-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            postData("{% url 'remove_cart_item_ajax' %}", {
+                csrfmiddlewaretoken: csrfToken,
                 item_id: itemId
-            },
-            success: function(response) {
+            })
+            .then(response => {
                 if (response.success) {
-                    $("[data-item-id='" + itemId + "']").remove();
+                    const row = document.querySelector(`[data-item-id="${itemId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
                     updateCartTotal(response.cart_total);
                 }
-            },
-            error: function(xhr) {
-                console.error("Ошибка при удалении товара: " + xhr.responseText);
-            }
+            })
+            .catch(error => {
+                console.error("Ошибка при удалении товара: ", error);
+            });
         });
     });
 
-    // 5) Clear the entire cart
-    $("#clear-cart-btn").on("click", function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: "{% url 'clear_cart' %}",
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(response) {
+    // Обработка кнопки "Очистить корзину"
+    const clearCartBtn = document.getElementById('clear-cart-btn');
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            postData("{% url 'clear_cart' %}", {
+                csrfmiddlewaretoken: csrfToken
+            })
+            .then(response => {
                 if (response.success) {
-                    $("#cart-container").empty();
+                    const cartContainer = document.getElementById('cart-container');
+                    if (cartContainer) {
+                        const categoryUrl = "{% url 'category' %}";
+                        cartContainer.innerHTML = `
+                            <div class="text-center py-16 space-y-6">
+                                <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+                                    <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
+                                <a href="${categoryUrl}"
+                                   class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
+                                    Перейти в каталог
+                                </a>
+                            </div>
+                        `;
+                    }
                     updateCartTotal("0");
                 }
-            },
-            error: function(xhr) {
-                console.error("Ошибка при очистке корзины: " + xhr.responseText);
-            }
+            })
+            .catch(error => {
+                console.error("Ошибка при очистке корзины: ", error);
+            });
         });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const orderLink = document.getElementById('order-link');
+    const messageContainer = document.getElementById('order-message');
+    
+    orderLink.addEventListener('click', function(e) {
+        // Читаем актуальную сумму из элемента cart-total
+        const cartTotalEl = document.getElementById('cart-total');
+        // Удаляем лишние символы, например, " ₸" и заменяем запятую на точку для parseFloat
+        const totalText = cartTotalEl.textContent.replace('₸', '').trim().replace(',', '.');
+        const currentTotal = parseFloat(totalText);
+        
+        if (currentTotal < 5000) {
+            e.preventDefault(); // Предотвращаем переход по ссылке
+            messageContainer.textContent = "Минимальная сумма заказа должна быть не менее 5000 ₸";
+            messageContainer.style.display = "block";
+        }
     });
 });
+
+
 </script>
+    
 {% endblock %}

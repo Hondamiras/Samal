@@ -45,7 +45,7 @@ def product_search(request):
     if query:
         products_list = products_list.filter(
             Q(name__icontains=query) | 
-            Q(description__icontains=query)
+            Q(id__icontains=query)
         ).distinct()
 
     # Пагинация
@@ -149,11 +149,6 @@ def contact_view(request):
 def about(request):
     return render(request, 'samal/about.html')
 
-
-
-
-
-
 # Представление для переключения лайка (добавление/удаление)
 def toggle_like(request, product_slug):
     product = get_object_or_404(Product, slug=product_slug)
@@ -202,10 +197,11 @@ def cart_detail(request):
         for item in cart_items
     ) if cart_items else 0
 
+
     return render(request, 'samal/cart_detail.html', {
         'cart': cart,
         'cart_items': cart_items,
-        'total_price': total_price
+        'total_price': total_price,
     })
 
 
@@ -280,6 +276,8 @@ def update_cart_quantity(request):
         
         is_wholesale = cart_item.quantity >= 100 and cart_item.product.wholesale_price is not None
 
+        unit_display = cart_item.product.get_unit_display()
+
         return JsonResponse({
             'success': True,
             'quantity': new_quantity,
@@ -288,7 +286,9 @@ def update_cart_quantity(request):
             'is_wholesale': is_wholesale,
             'unit_price': price_to_use,
             'wholesale_price': cart_item.product.wholesale_price,
-            'regular_price': cart_item.product.price
+            'regular_price': cart_item.product.price,
+            'unit_display': unit_display,
+            'new_price': price_to_use
         })
     else:
         return JsonResponse({'success': False, 'error': 'POST должен быть'}, status=405)
@@ -311,18 +311,23 @@ def remove_cart_item_ajax(request):
         except CartItem.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'CartItem not found'}, status=404)
 
-        # Calculate new total
+        # Calculate new total with wholesale logic
         cart = Cart.objects.filter(session_key=session_key).first()
         cart_total = 0
         if cart:
-            cart_total = sum(ci.product.price * ci.quantity for ci in cart.items.all())
+            for ci in cart.items.all():
+                if ci.quantity >= 100 and ci.product.wholesale_price: 
+                    cart_total += ci.product.wholesale_price * ci.quantity
+                else:
+                    cart_total += ci.product.price * ci.quantity
 
         return JsonResponse({
             'success': True,
-            'cart_total': cart_total
+            'cart_total': cart_total  # <-- This is the updated total you’ll use in JS
         })
     else:
         return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+
 
 
 def clear_cart(request):
@@ -336,3 +341,79 @@ def clear_cart(request):
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False, 'error': 'POST должен быть'}, status=405)
+
+def order_view(request):
+    session_key = get_session_key(request)
+    cart = Cart.objects.filter(session_key=session_key).first()
+    cart_items = cart.items.all() if cart else []
+
+    # Вычисляем общую сумму заказа
+    total_price = sum(
+        (item.product.wholesale_price if item.quantity >= 100 and item.product.wholesale_price 
+         else item.product.price) * item.quantity
+        for item in cart_items
+    )
+
+    if request.method == 'POST':
+        # Если сумма заказа меньше минимальной, выдаём сообщение об ошибке
+        if total_price < 5000:
+            messages.error(request, "Минимальная сумма заказа должна быть не менее 5000 ₸")
+            context = {
+                'cart_items': cart_items,
+                'total_price': total_price,
+            }
+            return render(request, 'samal/order.html', context)
+
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        comment = request.POST.get('comment', '')
+
+        # Формирование сообщения для email
+        subject = f"Новый заказ от {name}"
+        message_lines = [
+            "Детали заказа:",
+            "---------------------"
+        ]
+        for item in cart_items:
+            price = item.product.wholesale_price if (item.quantity >= 100 and item.product.wholesale_price) else item.product.price
+            line = (
+                f"ID {item.product.id}: {item.product.name} – {item.quantity} {item.product.get_unit_display()} – Цена: {price} ₸/ {item.product.get_unit_display()}, Итого: {item.total_price} ₸"
+                f"\n"
+                    )
+            message_lines.append(line)
+        message_lines.extend([
+            "---------------------",
+            "Контактная информация:",
+            f"Имя: {name}",
+            f"Email: {email}",
+            f"Телефон: {phone}",
+            f"Адрес доставки: {address}",
+            f"Комментарий: {comment}",
+        ])
+        full_message = "\n".join(message_lines)
+
+        # Отправка email с данными заказа
+        send_mail(
+            subject,
+            full_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.ORDER_EMAIL]
+        )
+
+        # Очистка корзины (удаляем объект Cart)
+        if cart:
+            cart.delete()
+
+        messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
+        return redirect('order_success')
+
+    context = {
+        'cart_items': cart_items,
+        'total_price': total_price,
+    }
+    return render(request, 'samal/order.html', context)
+
+def order_success_view(request):
+    return render(request, 'samal/order_success.html')
