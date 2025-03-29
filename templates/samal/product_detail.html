@@ -1,423 +1,817 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}{{ product.name }}{% endblock %}
+
 {% block content %}
 <div class="bg-gray-50">
-    <!-- Enhanced Breadcrumbs -->
-    <nav class="bg-white shadow-sm">
-        <div class="container mx-auto px-4 py-4">
-            <ol class="flex items-center space-x-2 text-sm text-gray-600">
-                <li class="hover:text-gray-900 transition-colors">
-                    <a href="{% url 'home' %}">Главная</a>
-                </li>
-                <li class="text-gray-400">/</li>
-                <li class="hover:text-gray-900 transition-colors">
-                    <a href="{% url 'category' %}">Каталог</a>
-                </li>
-                <li class="text-gray-400">/</li>
-                <li class="hover:text-gray-900 transition-colors">
-                    <a href="{% url 'category_detail' category.slug %}">{{ product.category.name }}</a>
-                </li>
-                <li class="text-gray-400">/</li>
-                <li class="text-gray-900 truncate max-w-xs">{{ product.name }}</li>
-            </ol>
-        </div>
-    </nav>
-
-    <!-- Product Main Section -->
-    <div class="container mx-auto px-4 py-8">
-        <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12">
-            <!-- Image Gallery -->
-            <div class="mb-8 lg:mb-0">
-                <div class="aspect-square bg-white rounded-xl shadow-lg overflow-hidden">
-                    <img id="main-image" 
-                         src="{{ product_images.0.image.url }}" 
-                         alt="{{ product.name }}" 
-                         class="w-full h-full object-contain transition-opacity duration-300">
-                </div>
-                <div class="mt-4 grid grid-cols-4 gap-2 sm:gap-4">
-                    {% for image in product_images %}
-                    <button onclick="changeMainImage(event, '{{ image.image.url }}')" 
-                            class="aspect-square border-2 rounded-lg overflow-hidden transition-all hover:border-blue-500 {% if forloop.first %}border-blue-500{% else %}border-gray-200{% endif %}">
-                        <img src="{{ image.image.url }}" 
-                             alt="{{ product.name }}" 
-                             class="w-full h-full object-cover">
-                    </button>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Product Details -->
-            <div>
-                <div class="flex items-center gap-4 mb-4">
-                    <h1 class="text-3xl font-bold text-gray-900">{{ product.name }}</h1>
-                    <span class="bg-red-100 text-red-600 text-sm font-semibold px-3 py-1 rounded-full">
-                      ID: {{ product.id }}
-                    </span>
-                  </div>
-                
-                <!-- Price and Like -->
-                <div class="flex items-baseline gap-4 mb-6">
-                    <span class="text-3xl font-bold text-blue-600">{{ product.price }} ₸</span>
-                </div>
-                
-                <!-- Оптовые цены (если есть) -->
-                {% if product.wholesale_price %}
-                <div class="mb-4">
-                    <button class="flex justify-between items-center w-full group" data-toggle="wholesale-prices">
-                        <div class="border-l-4 border-blue-100 pl-4">
-                            <span class="text-gray-600">Показать оптовые цены</span>
-                        </div>
-                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <div id="wholesale-prices" class="pl-4 mt-2">
-                        <span class="text-lg font-semibold text-blue-600">
-                            {{ product.wholesale_price }} ₸/{{ product.get_unit_display }} при заказе от 100 {{ product.get_unit_display }}
-                        </span>
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Статус наличия и тип продажи -->
-                <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
-                    <div class="flex items-start gap-4">
-                        <div class="shrink-0 mt-0.5">
-                            {% if product.availability == 'in_stock' %}
-                            <!-- Icon if needed -->
-                            {% endif %}
-                        </div>
-                        <div class="flex-1">
-                            <div class="mb-3">
-                                <h3 class="text-base font-semibold {% if product.availability == 'in_stock' %}text-emerald-800{% else %}text-amber-800{% endif %}">
-                                    {{ product.get_availability_display }}
-                                </h3>
-                                {% if product.availability == 'on_order' %}
-                                <p class="mt-1 text-sm {% if product.availability == 'in_stock' %}text-emerald-700{% else %}text-amber-700{% endif %}">
-                                    <span class="font-medium">Срок поставки:</span> 
-                                    {{ product.expected_delivery|default:"3-5 рабочих дней" }}
-                                </p>
-                                {% endif %}
-                            </div>
-                            <div class="flex items-center gap-2 pt-3 border-t border-dashed {% if product.availability == 'in_stock' %}border-emerald-100{% else %}border-amber-100{% endif %}">
-                                <svg class="w-5 h-5 text-gray-600 shrink-0" 
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     stroke-width="1.5"
-                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" 
-                                          d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
-                                </svg>
-                                <span class="text-blue-600">оптом и в розницу</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Минимальная сумма заказа -->
-                <div class="mb-4 pl-4 border-l-4 border-orange-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">Минимальная сумма заказа на сайте</p>
-                            <p class="text-xl font-bold text-orange-600 mt-1">5 000 ₸</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Product Description -->
-                <div class="prose max-w-none text-gray-700 mb-8">
-                    <div class="space-y-4">
-                        {{ product.description|linebreaksbr }}
-                    </div>
-                </div>
-                
-                <!-- Измененный блок с кнопками -->
-                <div class="flex flex-col sm:flex-row gap-4 mb-8">
-                    <!-- Кнопка добавления в корзину с AJAX -->
-                    <div class="flex-1">
-                        <button id="add-to-cart-ajax" data-slug="{{ product.slug }}"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl 
-                                       font-medium text-lg transition-colors duration-300 flex items-center justify-center">
-                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            Добавить в корзину
-                        </button>
-                        <!-- Cart message placeholder -->
-                        <div id="cart-message" class="mt-2 text-green-600"></div>
-                    </div>
-
-                    <!-- Кнопка лайка (AJAX) -->
-                    <div class="flex-1">
-                        <button id="toggle-like-ajax" data-slug="{{ product.slug }}"
-                                class="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-4 px-6 rounded-xl 
-                                       font-medium text-lg transition-colors duration-300 flex items-center justify-center">
-                            <svg id="like-icon" class="w-6 h-6 mr-2" fill="{% if liked %}currentColor{% else %}none{% endif %}" 
-                                 stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                            <span id="like-text">{% if liked %}В избранном{% else %}В избранное{% endif %}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Policies Section -->
-        <div class="mt-12 pt-8 border-t border-gray-200">
-            <div class="grid gap-12 md:grid-cols-2">
-                <!-- Left Column -->
-                <div class="space-y-8">
-                    <!-- Return Policy -->
-                    <section>
-                        <button class="flex justify-between items-center w-full group" data-toggle="return-policy">
-                            <h2 class="text-xl font-bold">Условия возврата</h2>
-                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="return-policy" class="space-y-4 text-gray-600 mt-4">
-                            <div class="p-4 bg-blue-50 rounded-lg">
-                                <p class="font-medium text-blue-800">14-дневный срок возврата</p>
-                                <p class="mt-1 text-sm">Товар должен быть в оригинальной упаковке без следов использования</p>
-                            </div>
-                            <ul class="space-y-2 list-disc pl-5">
-                                <li>Обратная доставка за счет покупателя</li>
-                                <li>Деньги возвращаются после проверки товара</li>
-                                <li>Обмен возможен на аналогичный товар</li>
-                            </ul>
-                        </div>
-                    </section>
-        
-                    <!-- Payment Methods -->
-                    <section>
-                        <button class="flex justify-between items-center w-full group" data-toggle="payment-methods">
-                            <h2 class="text-xl font-bold">Способы оплаты</h2>
-                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="payment-methods" class="grid grid-cols-2 gap-4 mt-4">
-                            <div class="p-4 bg-gray-50 rounded-lg text-center">
-                                <p class="font-medium">Наличные</p>
-                                <p class="text-sm text-gray-500 mt-1">При самовывозе</p>
-                            </div>
-                            <div class="p-4 bg-gray-50 rounded-lg text-center">
-                                <p class="font-medium">Kaspi QR</p>
-                                <p class="text-sm text-gray-500 mt-1">Онлайн оплата</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-        
-                <!-- Right Column -->
-                <div class="space-y-8">
-                    <!-- Delivery -->
-                    <section>
-                        <button class="flex justify-between items-center w-full group" data-toggle="delivery-info">
-                            <h2 class="text-xl font-bold">Доставка</h2>
-                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="delivery-info" class="space-y-4 mt-4">
-                            <div class="p-4 bg-green-50 rounded-lg">
-                                <p class="font-medium text-green-800">Бесплатный самовывоз</p>
-                                <p class="mt-1 text-sm text-green-700">Алматы, пр. Райымбека 221</p>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span>Курьерская доставка</span>
-                                    <span class="text-gray-500 text-sm">1-3 дня</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span>Транспортная компания</span>
-                                    <span class="text-gray-500 text-sm">По договоренности</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-        
-                    <!-- Delivery Regions -->
-                    <section>
-                        <button class="flex justify-between items-center w-full group" data-toggle="delivery-regions">
-                            <h2 class="text-xl font-bold">Регионы доставки</h2>
-                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="delivery-regions" class="grid grid-cols-2 gap-4 text-sm mt-4">
-                            <div class="space-y-2">
-                                <p class="font-medium">Казахстан</p>
-                                <ul class="space-y-1 text-gray-600">
-                                    <li>Абайская область: Аягоз, Курчатов, Семей, Чарск</li>
-                                    <li>Акмолинская область</li>
-                                    <li>Актюбинская область</li>
-                                    <li>Алматинская область</li>
-                                    <li>Атырауская область</li>
-                                    <li>Восточно-Казахстанская область</li>
-                                    <li>Жамбылская область</li>
-                                    <li>Жетысуская область: Жаркент, Сарканд, Талдыкорган, Текели, Ушарал, Уштобе</li>
-                                    <li>Западно-Казахстанская область</li>
-                                    <li>Карагандинская область</li>
-                                    <li>Костанайская область</li>
-                                    <li>Кызылординская область</li>
-                                    <li>Мангистауская область</li>
-                                    <li>Павлодарская область</li>
-                                    <li>Северо-Казахстанская область</li>
-                                    <li>Туркестанская область</li>
-                                    <li>Улытауская область: Жезказган, Каражал, Сатпаев</li>
-                                </ul>
-                            </div>
-                            <div class="space-y-2 mt-5">
-                                <p class="font-medium">СНГ</p>
-                                <ul class="space-y-1 text-gray-600">
-                                    <li>Азербайджан, все регионы</li>
-                                    <li>Армения, все регионы</li>
-                                    <li>Беларусь, все регионы</li>
-                                    <li>Грузия, все регионы</li>
-                                    <li>Молдова, все регионы</li>
-                                    <li>Россия, все регионы</li>
-                                    <li>Таджикистан, все регионы</li>
-                                    <li>Туркменистан, все регионы</li>
-                                    <li>Узбекистан, все регионы</li>
-                                    <li>Украина, все регионы</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </div>
-        
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggleButtons = document.querySelectorAll('[data-toggle]');
-            
-            toggleButtons.forEach(button => {
-                const targetId = button.getAttribute('data-toggle');
-                const target = document.getElementById(targetId);
-                const icon = button.querySelector('svg');
-                
-                // Initialize closed state
-                target.style.display = 'none';
-                icon.classList.remove('rotate-180');
-                
-                button.addEventListener('click', () => {
-                    const isOpen = target.style.display === 'none';
-                    
-                    // Toggle content
-                    target.style.display = isOpen ? 'block' : 'none';
-                    
-                    // Animate icon
-                    icon.classList.toggle('rotate-180', isOpen);
-                    
-                    // Accessibility
-                    button.setAttribute('aria-expanded', isOpen);
-                });
-                
-                // Accessibility attributes
-                button.setAttribute('role', 'button');
-                button.setAttribute('aria-controls', targetId);
-                button.setAttribute('aria-expanded', 'false');
-            });
-        });
-        </script>
-        
-        <style>
-        [data-toggle] {
-            transition: background-color 0.2s;
-            padding: 0.5rem 0;
-        }
-        
-        [data-toggle]:hover {
-            background-color: #f8fafc;
-        }
-        
-        [data-toggle] svg {
-            transition: transform 0.3s ease;
-        }
-        
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
-        </style>
+  <!-- Enhanced Breadcrumbs -->
+  <nav class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4">
+      <ol class="flex items-center space-x-2 text-sm text-gray-600">
+        <li class="hover:text-gray-900 transition-colors">
+          <a href="{% url 'home' %}">Главная</a>
+        </li>
+        <li class="text-gray-400">/</li>
+        <li class="hover:text-gray-900 transition-colors">
+          <a href="{% url 'category' %}">Каталог</a>
+        </li>
+        <li class="text-gray-400">/</li>
+        <li class="hover:text-gray-900 transition-colors">
+          <a href="{% url 'category_detail' category.slug %}">{{ product.category.name }}</a>
+        </li>
+        <li class="text-gray-400">/</li>
+        <li class="text-gray-900 truncate max-w-xs">{{ product.name }}</li>
+      </ol>
     </div>
+  </nav>
+
+  <!-- Product Main Section -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12">
+      <!-- Image Gallery -->
+      <div class="mb-8 lg:mb-0">
+        <div class="aspect-square bg-white rounded-xl shadow-lg overflow-hidden">
+          <!-- Main product image -->
+          <img id="main-image"
+               src="{{ product_images.0.image.url }}"
+               alt="{{ product.name }}"
+               class="w-full h-full object-contain transition-opacity duration-300">
+        </div>
+        <!-- Thumbnails -->
+        <div class="mt-4 grid grid-cols-4 gap-2 sm:gap-4">
+          {% for image in product_images %}
+          <button onclick="changeMainImage(event, '{{ image.image.url }}')"
+                  class="aspect-square border-2 rounded-lg overflow-hidden transition-all hover:border-blue-500 {% if forloop.first %}border-blue-500{% else %}border-gray-200{% endif %}">
+            <img src="{{ image.image.url }}"
+                 alt="{{ product.name }}"
+                 class="w-full h-full object-cover">
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Product Details -->
+      <div>
+        <div class="flex items-center gap-4 mb-4">
+          <h1 class="text-3xl font-bold text-gray-900">{{ product.name }}</h1>
+          <span class="bg-red-100 text-red-600 text-sm font-semibold px-3 py-1 rounded-full">
+            ID: {{ product.id }}
+          </span>
+        </div>
+
+        <!-- Price -->
+        <div class="flex items-baseline gap-4 mb-6">
+          <span class="text-3xl font-bold text-blue-600">
+            {{ product.price|floatformat:"-2" }} ₸
+          </span>
+        </div>
+
+        <!-- Оптовые цены (если есть) -->
+        {% if wholesale_prices %}
+        <div class="mb-4">
+          <button class="flex justify-between items-center w-full group" data-toggle="wholesale-prices">
+            <div class="border-l-4 border-blue-100 pl-4">
+              <span class="text-gray-600">Показать оптовые цены</span>
+            </div>
+            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="wholesale-prices" class="pl-4 mt-2">
+            {% for wp in wholesale_prices %}
+            <div class="mb-1">
+              <span class="text-lg font-semibold text-blue-600">
+                {{ wp.price|floatformat:"-2" }} ₸
+              </span>
+              <span class="text-sm text-gray-600">
+                при заказе от {{ wp.quantity }} {{ product.get_unit_display }}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Цвета (список) -->
+        {% if product_colors %}
+        <div class="mb-4">
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Доступные цвета</h3>
+          <ul class="list-disc pl-5">
+            {% for color in product_colors %}
+            <li class="text-sm">
+              {{ color.color }}{% if color.quantity %} — Количество: {{ color.quantity }}{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- Размеры (список) -->
+        {% if product_sizes %}
+        <div class="mb-4">
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Доступные размеры</h3>
+          <ul class="list-disc pl-5">
+            {% for size in product_sizes %}
+            <li class="text-sm">
+              {{ size.size }}{% if size.quantity %} — Количество: {{ size.quantity }}{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- Статус наличия -->
+        <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0 mt-0.5">
+              {% if product.availability == 'in_stock' %}
+              <!-- Some icon if needed -->
+              {% endif %}
+            </div>
+            <div class="flex-1">
+              <div class="mb-3">
+                <h3 class="text-base font-semibold {% if product.availability == 'in_stock' %}text-emerald-800{% else %}text-amber-800{% endif %}">
+                  {{ product.get_availability_display }}
+                </h3>
+                {% if product.availability == 'on_order' %}
+                <p class="mt-1 text-sm {% if product.availability == 'in_stock' %}text-emerald-700{% else %}text-amber-700{% endif %}">
+                  <span class="font-medium">Срок поставки:</span>
+                  {{ product.expected_delivery|default:"3-5 рабочих дней" }}
+                </p>
+                {% endif %}
+              </div>
+              <div class="flex items-center gap-2 pt-3 border-t border-dashed {% if product.availability == 'in_stock' %}border-emerald-100{% else %}border-amber-100{% endif %}">
+                <svg class="w-5 h-5 text-gray-600 shrink-0"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.5"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
+                </svg>
+                <span class="text-blue-600">оптом и в розницу</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Минимальная сумма заказа -->
+        <div class="mb-4 pl-4 border-l-4 border-orange-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 text-sm">Минимальная сумма заказа на сайте</p>
+              <p class="text-xl font-bold text-orange-600 mt-1">5 000 ₸</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Description -->
+        <div class="prose max-w-none text-gray-700 mb-8">
+          <div class="space-y-4">
+            {{ product.description|linebreaksbr }}
+          </div>
+        </div>
+
+        <!-- Section: Add-to-Cart Form and Like Button -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+          <!-- Multi-Variant Add-to-Cart Form -->
+          <div class="flex-1">
+            <form id="multi-add-to-cart-form"
+                  method="post"
+                  action="{% url 'add_to_cart' product.slug %}"
+                  class="space-y-6">
+              {% csrf_token %}
+              <div id="variants-container" class="space-y-4">
+                <!-- Initial Variant Block -->
+                <div class="variant-group border rounded-lg p-4 bg-white shadow-sm relative">
+                  <!-- Remove button -->
+                  <button type="button"
+                          class="remove-variant text-red-600 absolute top-2 right-2 text-sm font-medium"
+                          aria-label="Удалить вариант">
+                    ✕
+                  </button>
+
+                  <!-- Количество -->
+                  <div class="mb-4">
+                    <label for="variant-0-quantity" class="block font-medium text-gray-700 mb-1">
+                      Количество:
+                    </label>
+                    <input type="number"
+                           id="variant-0-quantity"
+                           name="variants-0-quantity"
+                           value="1"
+                           min="1"
+                           class="quantity-input w-32 border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           required
+                           aria-label="Количество товара">
+                  </div>
+
+                  <!-- Цвет (static from server) -->
+                  {% if product_colors %}
+                  <div class="mb-4">
+                    <label for="variant-0-color_id" class="block font-medium text-gray-700 mb-1">Цвет:</label>
+                    <select id="variant-0-color_id"
+                            name="variants-0-color_id"
+                            class="color-select w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            required aria-required="true">
+                      <option value="" disabled selected>-- Выберите цвет --</option>
+                      {% for color in product_colors %}
+                      <option value="{{ color.id }}"
+                              {% if color.quantity <= 0 %}disabled{% endif %}
+                              data-stock="{{ color.quantity }}">
+                        {{ color.color }}
+                        {% if color.quantity > 0 %}(Осталось: {{ color.quantity }}){% endif %}
+                      </option>
+                      {% endfor %}
+                    </select>
+                    <div class="variant-0-color_id-error text-red-500 text-sm mt-1"></div>
+                  </div>
+                  {% endif %}
+
+                  <!-- Размер (populated by JS) -->
+                  {% if product_sizes %}
+                  <div class="mb-4">
+                    <label for="variant-0-size_id" class="block font-medium text-gray-700 mb-1">Размер:</label>
+                    <select id="variant-0-size_id"
+                            name="variants-0-size_id"
+                            class="size-select w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            required aria-required="true">
+                      <option value="" disabled selected>-- Сначала выберите цвет --</option>
+                    </select>
+                    <div class="variant-0-size_id-error text-red-500 text-sm mt-1"></div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="flex flex-col gap-4">
+                <button type="button"
+                        id="add-variant"
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  + Добавить ещё вариант
+                </button>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors
+                               disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        aria-label="Добавить выбранные варианты в корзину">
+                  Добавить в корзину
+                </button>
+              </div>
+            </form>
+            <!-- Cart message placeholder -->
+            <div id="cart-message" class="mt-2 text-green-600"></div>
+          </div>
+
+          <!-- Like Button (AJAX) -->
+          <div class="flex-1">
+            <button id="toggle-like-ajax"
+                    data-slug="{{ product.slug }}"
+                    class="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-4 px-6 rounded-xl font-medium text-lg transition-colors duration-300 flex items-center justify-center">
+              <svg id="like-icon"
+                   class="w-6 h-6 mr-2"
+                   fill="{% if liked %}currentColor{% else %}none{% endif %}"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+              <span id="like-text">
+                {% if liked %}В избранном{% else %}В избранное{% endif %}
+              </span>
+            </button>
+          </div>
+        </div>
+        <!-- End Modified Block -->
+      </div>
+    </div>
+
+    <!-- Policies Section -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="grid gap-12 md:grid-cols-2">
+        <!-- Left Column -->
+        <div class="space-y-8">
+          <!-- Return Policy -->
+          <section>
+            <button class="flex justify-between items-center w-full group" data-toggle="return-policy">
+              <h2 class="text-xl font-bold">Условия возврата</h2>
+              <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="return-policy" class="space-y-4 text-gray-600 mt-4">
+              <div class="p-4 bg-blue-50 rounded-lg">
+                <p class="font-medium text-blue-800">14-дневный срок возврата</p>
+                <p class="mt-1 text-sm">Товар должен быть в оригинальной упаковке без следов использования</p>
+              </div>
+              <ul class="space-y-2 list-disc pl-5">
+                <li>Обратная доставка за счет покупателя</li>
+                <li>Деньги возвращаются после проверки товара</li>
+                <li>Обмен возможен на аналогичный товар</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Payment Methods -->
+          <section>
+            <button class="flex justify-between items-center w-full group" data-toggle="payment-methods">
+              <h2 class="text-xl font-bold">Способы оплаты</h2>
+              <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="payment-methods" class="grid grid-cols-2 gap-4 mt-4">
+              <div class="p-4 bg-gray-50 rounded-lg text-center">
+                <p class="font-medium">Наличные</p>
+                <p class="text-sm text-gray-500 mt-1">При самовывозе</p>
+              </div>
+              <div class="p-4 bg-gray-50 rounded-lg text-center">
+                <p class="font-medium">Kaspi QR</p>
+                <p class="text-sm text-gray-500 mt-1">Онлайн оплата</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-8">
+          <!-- Delivery -->
+          <section>
+            <button class="flex justify-between items-center w-full group" data-toggle="delivery-info">
+              <h2 class="text-xl font-bold">Доставка</h2>
+              <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="delivery-info" class="space-y-4 mt-4">
+              <div class="p-4 bg-green-50 rounded-lg">
+                <p class="font-medium text-green-800">Бесплатный самовывоз</p>
+                <p class="mt-1 text-sm text-green-700">Алматы, пр. Райымбека 221</p>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span>Курьерская доставка</span>
+                  <span class="text-gray-500 text-sm">1-3 дня</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span>Транспортная компания</span>
+                  <span class="text-gray-500 text-sm">По договоренности</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Delivery Regions -->
+          <section>
+            <button class="flex justify-between items-center w-full group" data-toggle="delivery-regions">
+              <h2 class="text-xl font-bold">Регионы доставки</h2>
+              <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="delivery-regions" class="grid grid-cols-2 gap-4 text-sm mt-4">
+              <div class="space-y-2">
+                <p class="font-medium">Казахстан</p>
+                <ul class="space-y-1 text-gray-600">
+                  <li>Абайская область: Аягоз, Курчатов, Семей, Чарск</li>
+                  <li>Акмолинская область</li>
+                  <li>Актюбинская область</li>
+                  <li>Алматинская область</li>
+                  <li>Атырауская область</li>
+                  <li>Восточно-Казахстанская область</li>
+                  <li>Жамбылская область</li>
+                  <li>Жетысуская область: Жаркент, Сарканд, Талдыкорган, Текели, Ушарал, Уштобе</li>
+                  <li>Западно-Казахстанская область</li>
+                  <li>Карагандинская область</li>
+                  <li>Костанайская область</li>
+                  <li>Кызылординская область</li>
+                  <li>Мангистауская область</li>
+                  <li>Павлодарская область</li>
+                  <li>Северо-Казахстанская область</li>
+                  <li>Туркестанская область</li>
+                  <li>Улытауская область: Жезказган, Каражал, Сатпаев</li>
+                </ul>
+              </div>
+              <div class="space-y-2 mt-5">
+                <p class="font-medium">СНГ</p>
+                <ul class="space-y-1 text-gray-600">
+                  <li>Азербайджан, все регионы</li>
+                  <li>Армения, все регионы</li>
+                  <li>Беларусь, все регионы</li>
+                  <li>Грузия, все регионы</li>
+                  <li>Молдова, все регионы</li>
+                  <li>Россия, все регионы</li>
+                  <li>Таджикистан, все регионы</li>
+                  <li>Туркменистан, все регионы</li>
+                  <li>Узбекистан, все регионы</li>
+                  <li>Украина, все регионы</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Script for Expandable Sections -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleButtons = document.querySelectorAll('[data-toggle]');
+      toggleButtons.forEach(button => {
+        const targetId = button.getAttribute('data-toggle');
+        const target = document.getElementById(targetId);
+        const icon = button.querySelector('svg');
+        target.style.display = 'none';
+        icon.classList.remove('rotate-180');
+        button.addEventListener('click', () => {
+          const isOpen = (target.style.display === 'none');
+          target.style.display = isOpen ? 'block' : 'none';
+          icon.classList.toggle('rotate-180', isOpen);
+          button.setAttribute('aria-expanded', isOpen);
+        });
+        button.setAttribute('role', 'button');
+        button.setAttribute('aria-controls', targetId);
+        button.setAttribute('aria-expanded', 'false');
+      });
+    });
+    </script>
+
+    <style>
+    [data-toggle] {
+      transition: background-color 0.2s;
+      padding: 0.5rem 0;
+    }
+    [data-toggle]:hover {
+      background-color: #f8fafc;
+    }
+    [data-toggle] svg {
+      transition: transform 0.3s ease;
+    }
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+    </style>
 </div>
 
+<!-- Подключение Toastify -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<!-- We pass the variants JSON from the view into JS -->
 <script>
-function changeMainImage(e, url) {
-    const mainImg = document.getElementById('main-image');
-    mainImg.style.opacity = '0';
-    setTimeout(() => {
-        mainImg.src = url;
-        mainImg.style.opacity = '1';
-    }, 300);
-    
-    // Update thumbnail borders
-    document.querySelectorAll('[onclick^="changeMainImage"]').forEach(btn => {
-        btn.classList.remove('border-blue-500');
-        btn.classList.add('border-gray-200');
-    });
-    e.currentTarget.classList.add('border-blue-500');
-    e.currentTarget.classList.remove('border-gray-200');
-}
+  const productVariants = JSON.parse('{{ variants_json|safe }}');
+  /*
+    Example structure:
+    {
+      "1": [
+        { "size_id": 10, "size_name": "S", "quantity": 0 },
+        { "size_id": 11, "size_name": "M", "quantity": 15 }
+      ],
+      "2": [
+        { "size_id": 10, "size_name": "S", "quantity": 5 },
+        { "size_id": 11, "size_name": "M", "quantity": -1 }
+      ]
+    }
+  */
 </script>
 
-<!-- jQuery for AJAX calls (if not already included in base.html) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function() {
-    // AJAX for Add to Cart
-    $("#add-to-cart-ajax").on("click", function(e) {
-        e.preventDefault();
-        var productSlug = $(this).data("slug");
-        var url = "{% url 'add_to_cart' product.slug %}";
-        $.ajax({
-            url: url,
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(response) {
-                $("#cart-message").html(response.message + " (Количество: " + response.quantity + ")");
-            },
-            error: function(xhr, status, error) {
-                $("#cart-message").html("Ошибка: " + error);
-            }
-        });
+// Функция смены главного изображения
+function changeMainImage(e, url) {
+  const mainImg = document.getElementById('main-image');
+  mainImg.style.opacity = '0';
+  setTimeout(() => {
+    mainImg.src = url;
+    mainImg.style.opacity = '1';
+  }, 300);
+
+  document.querySelectorAll('[onclick^="changeMainImage"]').forEach(btn => {
+    btn.classList.remove('border-blue-500');
+    btn.classList.add('border-gray-200');
+  });
+  e.currentTarget.classList.add('border-blue-500');
+  e.currentTarget.classList.remove('border-gray-200');
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  // Helper: convert FormData to x-www-form-urlencoded
+  function formDataToUrlEncoded(formData) {
+    return new URLSearchParams(formData).toString();
+  }
+
+  // CSRF
+  const csrfToken = '{{ csrf_token }}';
+
+  // Single-form add-to-cart (if you use one somewhere else)
+  const singleForm = document.getElementById("add-to-cart-form");
+  if (singleForm) {
+    singleForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const url = singleForm.getAttribute("action") || "{% url 'add_to_cart' product.slug %}";
+      const formData = new FormData(singleForm);
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formDataToUrlEncoded(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        Toastify({
+          text: data.message + " (Количество: " + data.quantity + ")",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+        }).showToast();
+      })
+      .catch(error => {
+        Toastify({
+          text: "Ошибка: " + error,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+        }).showToast();
+      });
+    });
+  }
+
+  // Toggle Like
+  const toggleLikeBtn = document.getElementById("toggle-like-ajax");
+  if (toggleLikeBtn) {
+    toggleLikeBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const url = "{% url 'toggle_like' product.slug %}";
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          csrfmiddlewaretoken: csrfToken
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const likeText = document.getElementById("like-text");
+          const likeIcon = document.getElementById("like-icon");
+          if (data.liked) {
+            likeText.textContent = "В избранном";
+            likeIcon.setAttribute("fill", "currentColor");
+          } else {
+            likeText.textContent = "В избранное";
+            likeIcon.setAttribute("fill", "none");
+          }
+          Toastify({
+            text: data.liked ? "Товар добавлен в избранное" : "Товар удалён из избранного",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+          }).showToast();
+        }
+      })
+      .catch(error => {
+        Toastify({
+          text: "Ошибка: " + error,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+        }).showToast();
+      });
+    });
+  }
+
+  /**
+   * attachColorChangeHandler(variantBlock):
+   *   1) Waits for user to pick a color -> populates sizes
+   *   2) Waits for user to pick a size -> sets `max` for quantity if stock > 0
+   */
+  function attachColorChangeHandler(variantBlock) {
+    const colorSelect = variantBlock.querySelector('.color-select');
+    const sizeSelect = variantBlock.querySelector('.size-select');
+    const quantityInput = variantBlock.querySelector('.quantity-input');
+
+    if (!colorSelect || !sizeSelect || !quantityInput) return;
+
+    // Initially instruct user to choose color
+    sizeSelect.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
+
+    // When color changes, we populate the sizes
+    colorSelect.addEventListener('change', function() {
+      sizeSelect.innerHTML = '<option value="" disabled selected>-- Выберите размер --</option>';
+      // Remove any previous max
+      quantityInput.removeAttribute('max');
+
+      const selectedColorID = this.value;
+      if (!selectedColorID) return;
+
+      const sizesForColor = productVariants[selectedColorID];
+      if (!sizesForColor || !Array.isArray(sizesForColor)) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.disabled = true;
+        opt.textContent = 'Нет доступных размеров для этого цвета';
+        sizeSelect.appendChild(opt);
+        return;
+      }
+
+      // Fill the size dropdown, store quantity in dataset
+      sizesForColor.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.size_id;
+        opt.dataset.qty = item.quantity; // store the numeric stock
+        if (item.quantity > 0) {
+          opt.textContent = `${item.size_name} (Осталось: ${item.quantity})`;
+        } else if (item.quantity === 0) {
+          opt.textContent = `${item.size_name}`; // or "(Нет в наличии)"
+        } else {
+          // quantity < 0 => unknown
+          opt.textContent = `${item.size_name}`; // e.g. "(неизвестно)"
+        }
+        sizeSelect.appendChild(opt);
+      });
     });
 
-    // AJAX for Toggle Like
-    $("#toggle-like-ajax").on("click", function(e) {
-        e.preventDefault();
-        var productSlug = $(this).data("slug");
-        var url = "{% url 'toggle_like' product.slug %}";
-        $.ajax({
-            url: url,
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if(response.success) {
-                    if(response.liked) {
-                        $("#like-text").text("В избранном");
-                        $("#like-icon").attr("fill", "currentColor");
-                    } else {
-                        $("#like-text").text("В избранное");
-                        $("#like-icon").attr("fill", "none");
-                    }
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Ошибка: " + error);
-            }
-        });
+    // When size changes, update the quantity input's max
+    sizeSelect.addEventListener('change', function() {
+      const selectedOpt = sizeSelect.options[sizeSelect.selectedIndex];
+      if (!selectedOpt) return;
+      const qty = parseInt(selectedOpt.dataset.qty, 10);
+
+      if (!isNaN(qty) && qty > 0) {
+        quantityInput.setAttribute('max', qty);
+      } else {
+        quantityInput.removeAttribute('max');
+      }
     });
+  }
+
+  // MULTI-FORM logic
+  const multiForm = document.getElementById("multi-add-to-cart-form");
+  const variantsContainer = document.getElementById('variants-container');
+  const addVariantBtn = document.getElementById('add-variant');
+  const maxVariants = 10;
+
+  // For the first block on page load
+  if (variantsContainer) {
+    const initialBlock = variantsContainer.querySelector('.variant-group');
+    if (initialBlock) attachColorChangeHandler(initialBlock);
+  }
+
+  // Submit the multi-variant form
+  if (multiForm) {
+    multiForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const url = multiForm.getAttribute("action");
+      const formData = new FormData(multiForm);
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formDataToUrlEncoded(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        Toastify({
+          text: data.message,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+        }).showToast();
+        if (typeof updateCartCount === "function") {
+          updateCartCount();
+        }
+      })
+      .catch(error => {
+        Toastify({
+          text: "Ошибка: " + error,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+        }).showToast();
+      });
+    });
+  }
+
+  // Add new variant block
+  if (addVariantBtn && variantsContainer) {
+    addVariantBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const variantGroups = variantsContainer.querySelectorAll('.variant-group');
+      const newIndex = variantGroups.length;
+
+      if (newIndex >= maxVariants) {
+        Toastify({
+          text: `Максимум ${maxVariants} вариантов!`,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+        }).showToast();
+        addVariantBtn.disabled = true;
+        return;
+      }
+
+      // Clone the first variant block
+      const templateBlock = variantGroups[0];
+      const newBlock = templateBlock.cloneNode(true);
+
+      // Update IDs/names for the new block
+      newBlock.querySelectorAll('[id]').forEach(elem => {
+        elem.id = elem.id.replace(/\d+/, newIndex);
+      });
+      newBlock.querySelectorAll('[name]').forEach(elem => {
+        elem.name = elem.name.replace(/\d+/, newIndex);
+      });
+
+      // Clear the new block's inputs
+      newBlock.querySelectorAll('input, select').forEach(elem => {
+        if (elem.tagName.toLowerCase() === 'input') {
+          if (elem.type === 'number') {
+            elem.value = 1;
+            elem.removeAttribute('max'); // remove previous max
+          } else {
+            elem.value = '';
+          }
+        } else if (elem.tagName.toLowerCase() === 'select') {
+          if (elem.classList.contains('size-select')) {
+            elem.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
+          } else {
+            elem.selectedIndex = 0;
+          }
+        }
+      });
+
+      // Re-attach remove-variant logic
+      const removeBtn = newBlock.querySelector('.remove-variant');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          newBlock.remove();
+          if (variantsContainer.querySelectorAll('.variant-group').length < maxVariants) {
+            addVariantBtn.disabled = false;
+          }
+        });
+      }
+
+      // Append & attach color->size logic
+      variantsContainer.appendChild(newBlock);
+      attachColorChangeHandler(newBlock);
+
+      if (variantsContainer.querySelectorAll('.variant-group').length >= maxVariants) {
+        addVariantBtn.disabled = true;
+      }
+    });
+  }
+
+  // Remove variant block
+  if (variantsContainer) {
+    variantsContainer.addEventListener('click', function(e) {
+      if (e.target.classList.contains('remove-variant')) {
+        e.preventDefault();
+        const block = e.target.closest('.variant-group');
+        if (block) {
+          block.remove();
+        }
+        const countNow = variantsContainer.querySelectorAll('.variant-group').length;
+        if (countNow < maxVariants && addVariantBtn) {
+          addVariantBtn.disabled = false;
+        }
+      }
+    });
+  }
 });
 </script>
 {% endblock %}

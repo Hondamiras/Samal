@@ -1,5 +1,5 @@
 from django.contrib import admin
-from samal.models import Product, Category, ProductImage
+from samal.models import Product, Category, ProductImage, WholesalePrice, ProductVariant, ProductSize, ProductColor
 
 # Register your models here.
 @admin.register(Product)
@@ -18,3 +18,20 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'image')
+
+@admin.register(WholesalePrice)
+class WholesalePriceAdmin(admin.ModelAdmin):
+    list_display = ('product', 'quantity', 'price')
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = ('product', 'color', 'size')
+
+@admin.register(ProductSize)
+class ProductSizeAdmin(admin.ModelAdmin):
+    list_display = ('product', 'size')
+
+@admin.register(ProductColor)
+class ProductColorAdmin(admin.ModelAdmin):
+    list_display = ('product', 'color')
+

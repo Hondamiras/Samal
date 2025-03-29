@@ -3,392 +3,443 @@
 
 {% block content %}
 <div class="max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-4 py-8">
-    {% if cart_items %}
-    <!-- Cart Container -->
-    <div id="cart-container" class="bg-white shadow-lg rounded-xl overflow-hidden divide-y divide-gray-100">
-        {% for item in cart_items %}
-        <div class="group flex flex-col gap-3 p-3 sm:p-5 md:flex-row" data-item-id="{{ item.id }}">
-            <!-- Product Image -->
-            <a href="{% url 'product_detail' item.product.slug %}" 
-            class="w-full h-40 md:w-32 md:h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
-                    class="w-full h-full object-cover object-center transform transition-transform duration-200 group-hover:scale-105">
-            </a>
-            
-            <!-- Product Info -->
-            <div class="flex-1 flex flex-col justify-between w-full">
-                
-                <!-- Top row: Name + (Remove on mobile) -->
-                <div class="flex justify-between items-start">
-                    <a href="{% url 'product_detail' item.product.slug %}"
-                    class="text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-700 line-clamp-2">
-                    {{ item.product.name }}
-                    </a>
-                    <!-- Remove Button - Mobile -->
-                    <button class="md:hidden p-1 text-red-500 hover:text-red-700 remove-btn" data-item-id="{{ item.id }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Bottom row: Quantity + (Remove on desktop) -->
-                <div class="flex items-center justify-between gap-2 mt-3">
-                    <!-- Quantity Controls -->
-                    <div class="flex items-center border border-gray-200 rounded-lg bg-white shadow-sm">
-                        <button class="minus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-lg"
-                                data-item-id="{{ item.id }}">
-                            −
-                        </button>
-                        <input type="number"
-                            value="{{ item.quantity }}"
-                            data-current-quantity="{{ item.quantity }}"
-                            data-item-id="{{ item.id }}"
-                            class="quantity-input w-14 text-center border-x border-gray-200 bg-transparent py-1 
-                                    focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <button class="plus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-r-lg" 
-                                data-item-id="{{ item.id }}">
-                            +
-                        </button>
-                    </div>
-                    
-                    <!-- Remove Button - Desktop -->
-                    <button class="hidden md:flex items-center p-2 text-red-500 hover:text-red-700 remove-btn" 
-                            data-item-id="{{ item.id }}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        <span class="ml-1 text-sm">Удалить</span>
-                    </button>
-                </div>
-                
-                <!-- Price Details -->
-                <div class="mt-2 flex flex-col items-end space-y-1">
-                    <!-- Unit Price -->
-                    {% if item.quantity >= 100 and item.product.wholesale_price %}
-                        <div class="flex flex-col sm:flex-row items-end gap-1">
-                            <span class="line-through text-gray-400">{{ item.product.price }} ₸</span>
-                            <span class="text-green-600 font-medium flex items-center gap-1">
-                                {{ item.product.wholesale_price }} ₸/ {{ item.product.get_unit_display }}
-                                <span class="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">ОПТ</span>
-                            </span>
-                        </div>
-                    {% else %}
-                        <span class="text-gray-600">
-                            {{ item.product.price }} ₸/{{ item.product.get_unit_display }}
-                        </span>
-                    {% endif %}
-                    
-                    <!-- Total Price -->
-                    <div class="text-base font-semibold text-gray-900 item-total-value">
-                        {{ item.total_price }} ₸
-                    </div>
-                </div>
-            
-            </div>
-        </div>
-        {% endfor %}
-
-
-        <!-- Cart Total -->
-        <div class="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div class="flex justify-between items-center">
-                <span class="text-lg sm:text-xl font-semibold text-gray-800">К оплате без доставки:</span>
-                <span id="cart-total" class="text-xl sm:text-2xl font-bold text-blue-800">{{ cart.total_price }} ₸</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="order-message" class="text-red-600 text-center mt-5" style="display:none;"></div>
-    <!-- Cart Actions -->
-    <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <a href="{% url 'category' %}"
-           class="px-6 py-3 text-center border-2 border-gray-200 rounded-xl hover:border-blue-500 text-gray-700 hover:text-blue-700 transition-all duration-200 font-medium">
-            ← Продолжить покупки
+  {% if cart_items %}
+  <!-- Cart Container -->
+  <div id="cart-container" class="bg-white shadow-lg rounded-xl overflow-hidden divide-y divide-gray-100">
+    {% for item in cart_items %}
+    <div class="cart-item group flex flex-col gap-3 p-3 sm:p-5 md:flex-row" data-item-id="{{ item.id }}">
+      <!-- Product Image -->
+      {% if item.product_variant and item.product_variant.product.slug %}
+        <a href="{% url 'product_detail' item.product_variant.product.slug %}"
+          class="w-full h-60 md:w-32 md:h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <img src="{{ item.product_variant.product.image.url }}"
+              alt="{{ item.product_variant.product.name }}"
+              class="w-full h-full object-cover object-center transform transition-transform duration-200 hover:scale-105">
         </a>
-        <button id="clear-cart-btn"
-                class="px-6 py-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors duration-200 font-medium flex items-center justify-center space-x-2">
+      {% else %}
+        <div class="w-full h-60 md:w-32 md:h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden shadow-sm">
+          <img src="{{ item.product_variant.product.image.url }}"
+              alt="{{ item.product_variant.product.name }}"
+              class="w-full h-full object-cover object-center">
+        </div>
+      {% endif %}
+
+      <!-- Product Info -->
+      <div class="flex-1 flex flex-col justify-between w-full">
+        <!-- Top row: Name + (Remove on mobile) -->
+        <div class="flex justify-between items-start">
+          {% if item.product_variant and item.product_variant.product.slug %}
+          <a href="{% url 'product_detail' item.product_variant.product.slug %}"
+             class="text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-700 line-clamp-2">
+            {{ item.product_variant.product.name }}
+          </a>
+          {% else %}
+          <span class="text-base sm:text-lg font-semibold text-gray-900">
+            {{ item.product_variant.product.name }}
+          </span>
+          {% endif %}
+          <!-- Remove Button - Mobile -->
+          <button class="md:hidden p-1 text-red-500 hover:text-red-700 remove-btn" data-item-id="{{ item.id }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"/>
             </svg>
-            <span>Очистить корзину</span>
-        </button>
-        <a href="{% url 'order' %}" id="order-link"
-           class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
-            Оформить заказ →
-        </a>
-    </div>
-    {% else %}
-    <!-- Empty Cart -->
-    <div class="text-center py-16 space-y-6">
-        <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
-            <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
+          </button>
         </div>
-        <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
-        <a href="{% url 'category' %}"
-           class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
-            Перейти в каталог
-        </a>
+
+        <!-- Display Selected Options -->
+        <div class="mt-2 text-sm text-gray-700">
+          {% if item.product_variant.color %}
+          <span>Цвет: {{ item.product_variant.color.color }}</span>
+          {% endif %}
+          {% if item.product_variant.size %}
+          <span class="ml-4">Размер: {{ item.product_variant.size.size }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Bottom row: Quantity + (Remove on desktop) -->
+        <div class="flex items-center justify-between gap-2 mt-3">
+          <!-- Quantity Controls -->
+          <div class="flex items-center border border-gray-200 rounded-lg bg-white shadow-sm">
+            <button class="minus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-lg"
+                    data-item-id="{{ item.id }}">
+              −
+            </button>
+            <input type="number"
+                   value="{{ item.quantity }}"
+                   data-current-quantity="{{ item.quantity }}"
+                   data-item-id="{{ item.id }}"
+                   {% if item.product_variant.quantity and item.product_variant.quantity > 0 %}
+                     max="{{ item.product_variant.quantity }}"
+                   {% endif %}
+                   class="quantity-input w-14 text-center border-x border-gray-200 bg-transparent py-1
+                          focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button class="plus-btn px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-r-lg"
+                    data-item-id="{{ item.id }}">
+              +
+            </button>
+          </div>
+
+          <!-- Remove Button - Desktop -->
+          <button class="hidden md:flex items-center p-2 text-red-500 hover:text-red-700 remove-btn"
+                  data-item-id="{{ item.id }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span class="ml-1 text-sm">Удалить</span>
+          </button>
+        </div>
+
+        <!-- Price Details -->
+        <div class="mt-2 flex flex-col items-end space-y-1">
+          <!-- Unit Price -->
+          <div class="price-per-unit" data-unit="{{ item.product_variant.product.get_unit_display }}">
+            {% if item.quantity >= 100 and item.product_variant.product.wholesale_prices.all %}
+              <div class="flex flex-col sm:flex-row items-end gap-1">
+                <span class="line-through text-gray-400">{{ item.product_variant.product.price|floatformat:0 }} ₸</span>
+                <span class="text-green-600 font-medium flex items-center gap-1">
+                  {{ item.product_variant.product.wholesale_prices.all.0.price|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
+                  <span class="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">ОПТ</span>
+                </span>
+              </div>
+            {% else %}
+              <span class="text-gray-600">
+                {{ item.product_variant.product.price|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
+              </span>
+            {% endif %}
+          </div>
+          <!-- Total Price for the item -->
+          <div class="text-base font-semibold text-gray-900 item-total-value">
+            {{ item.total_price|floatformat:0 }} ₸
+          </div>
+        </div>
+      </div>
     </div>
-    {% endif %}
+    {% endfor %}
+
+    <!-- Cart Total -->
+    <div class="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div class="flex justify-between items-center">
+        <span class="text-lg sm:text-xl font-semibold text-gray-800">К оплате без доставки:</span>
+        <span id="cart-total" class="text-xl sm:text-2xl font-bold text-blue-800">{{ cart.total_price|floatformat:0 }} ₸</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="order-message" class="text-red-600 text-center mt-5" style="display:none;"></div>
+  <!-- Cart Actions -->
+  <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <a href="{% url 'category' %}"
+       class="px-6 py-3 text-center border-2 border-gray-200 rounded-xl hover:border-blue-500 text-gray-700 hover:text-blue-700 transition-all duration-200 font-medium">
+      ← Продолжить покупки
+    </a>
+    <button id="clear-cart-btn"
+            class="px-6 py-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors duration-200 font-medium flex items-center justify-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      <span>Очистить корзину</span>
+    </button>
+    <a href="{% url 'order' %}" id="order-link"
+       class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
+      Оформить заказ →
+    </a>
+  </div>
+  {% else %}
+  <!-- Empty Cart -->
+  <div class="text-center py-16 space-y-6">
+    <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+      <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+    </div>
+    <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
+    <a href="{% url 'category' %}"
+       class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
+      Перейти в каталог
+    </a>
+  </div>
+  {% endif %}
 </div>
 
-<!-- Inline CSS for the .price-change animation -->
+<!-- Inline CSS for the price-change animation -->
 <style>
 .price-change {
-    transition: transform 0.3s ease;
-    transform: scale(1.05);
+  transition: transform 0.3s ease;
+  transform: scale(1.05);
 }
 </style>
 
+<!-- Подключение Toastify -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = '{{ csrf_token }}';
+document.addEventListener("DOMContentLoaded", function() {
+  // Helper to convert FormData to URL-encoded string
+  function formDataToUrlEncoded(formData) {
+    return new URLSearchParams(formData).toString();
+  }
 
-    // Функция форматирования цены в формат "2823,00 ₸"
-    function formatPrice(price) {
-        let formatted = parseFloat(price).toFixed(2).replace('.', ',');
-        return formatted + ' ₸';
+  const csrfToken = '{{ csrf_token }}';
+
+  // Utility to format prices with comma decimal
+  function formatPrice(priceValue) {
+    let parsed = parseFloat(priceValue);
+    if (isNaN(parsed)) parsed = 0;
+    let formatted = parsed % 1 === 0 ? parsed.toFixed(0) : parsed.toFixed(2);
+    return formatted.replace('.', ',') + ' ₸';
+  }
+
+  // Update cart total display
+  function updateCartTotal(newTotal) {
+    const cartTotalEl = document.getElementById('cart-total');
+    if (cartTotalEl) {
+      let parsed = parseFloat(newTotal);
+      if (isNaN(parsed)) {
+        cartTotalEl.textContent = '0 ₸';
+      } else {
+        let formatted = parsed % 1 === 0 ? parsed.toFixed(0) : parsed.toFixed(2);
+        formatted = formatted.replace('.', ',');
+        cartTotalEl.textContent = formatted + ' ₸';
+      }
+    }
+  }
+
+  // A small helper to clamp quantity in the input if max is set
+  function clampQuantity(inputEl, newVal) {
+    const maxAttr = inputEl.getAttribute('max');
+    if (!maxAttr) return newVal;  // unlimited
+    const max = parseInt(maxAttr, 10);
+    if (!isNaN(max) && max > 0 && newVal > max) {
+      return max;
+    }
+    return newVal;
+  }
+
+  // Cart item event delegation
+  const cartContainer = document.getElementById('cart-container');
+  cartContainer?.addEventListener('click', async (e) => {
+    const target = e.target.closest('button');
+    if (!target) return;
+    const itemId = target.dataset.itemId;
+    if (!itemId) return;
+
+    let action;
+    if (target.classList.contains('minus-btn')) {
+      action = 'minus';
+    } else if (target.classList.contains('plus-btn')) {
+      // Check the input for max
+      const parentRow = target.closest('.cart-item');
+      if (!parentRow) return;
+      const quantityInput = parentRow.querySelector('.quantity-input');
+      if (quantityInput) {
+        let curVal = parseInt(quantityInput.value) || 1;
+        let newVal = curVal + 1;
+        // clamp if there's a max
+        newVal = clampQuantity(quantityInput, newVal);
+        if (newVal === curVal) {
+          // Already at max, do nothing
+          return;
+        }
+      }
+      action = 'plus';
+    } else if (target.classList.contains('remove-btn')) {
+      action = 'remove';
+    } else {
+      return;
+    }
+    e.preventDefault();
+
+    let url = (action === 'remove')
+              ? "{% url 'remove_cart_item_ajax' %}"
+              : "{% url 'update_cart_quantity' %}";
+
+    const data = {
+      csrfmiddlewaretoken: csrfToken,
+      item_id: itemId,
+      action: action
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams(data)
+      });
+      const json = await response.json();
+      if (json.success) {
+        if (action === 'remove' || (json.quantity === 0)) {
+          const row = document.querySelector(`[data-item-id="${itemId}"]`);
+          if (row) row.remove();
+        } else {
+          updateRow(itemId, json.quantity, json.item_total, json);
+        }
+        updateCartTotal(json.cart_total);
+      }
+    } catch (error) {
+      console.error(`Ошибка при выполнении действия ${action}: `, error);
+    }
+  });
+
+  // Direct changes in <input type="number">
+  document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('change', async function() {
+      const itemId = this.dataset.itemId;
+      let newQuantity = parseInt(this.value);
+      if (isNaN(newQuantity) || newQuantity < 1) {
+        this.value = this.dataset.currentQuantity;
+        return;
+      }
+      // clamp if there's a max
+      newQuantity = clampQuantity(this, newQuantity);
+
+      try {
+        const response = await fetch("{% url 'update_cart_quantity' %}", {
+          method: "POST",
+          headers: {"Content-Type": "application/x-www-form-urlencoded"},
+          body: new URLSearchParams({
+            csrfmiddlewaretoken: csrfToken,
+            item_id: itemId,
+            action: 'set',
+            quantity: newQuantity
+          })
+        });
+        const json = await response.json();
+        if (json.success) {
+          updateRow(itemId, json.quantity, json.item_total, json);
+          updateCartTotal(json.cart_total);
+        }
+      } catch (error) {
+        console.error("Ошибка при изменении количества: ", error);
+      }
+    });
+  });
+
+  // Update row with new price
+  function updateRow(itemId, newQuantity, newItemTotal, response) {
+    const row = document.querySelector(`[data-item-id="${itemId}"]`);
+    if (!row) return;
+
+    // Update input
+    const quantityInput = row.querySelector('.quantity-input');
+    if (quantityInput) {
+      quantityInput.value = newQuantity;
+      quantityInput.dataset.currentQuantity = newQuantity;
     }
 
-    // Обновление отображаемой общей суммы в элементе с id "cart-total"
-    function updateCartTotal(newTotal) {
-        const cartTotalEl = document.getElementById('cart-total');
-        if (cartTotalEl) {
-            cartTotalEl.textContent = formatPrice(newTotal);
-        }
+    // Update price display
+    const priceContainer = row.querySelector('.price-per-unit');
+    if (priceContainer) {
+      const formattedRegular = formatPrice(response.regular_price);
+      const formattedWholesale = response.wholesale_price
+          ? formatPrice(response.wholesale_price).replace(' ₸','')
+          : null;
+      const unitDisplay = response.unit_display;
+
+      if (response.is_wholesale && formattedWholesale) {
+        priceContainer.innerHTML = `
+          <div class="flex flex-col sm:flex-row items-end gap-1">
+            <span class="line-through text-gray-400">${formattedRegular}</span>
+            <span class="text-green-600 font-medium flex items-center gap-1">
+              ${formattedWholesale} ₸/${unitDisplay}
+              <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
+            </span>
+          </div>`;
+      } else {
+        priceContainer.innerHTML = `<span class="text-gray-600">${formattedRegular}/${unitDisplay}</span>`;
+      }
+      priceContainer.classList.add('price-change');
+      setTimeout(() => priceContainer.classList.remove('price-change'), 300);
     }
 
-    // Функция обновления данных одной строки товара (количество, отображение цены)
-    function updateRow(itemId, newQuantity, newItemTotal, response) {
-        const row = document.querySelector(`[data-item-id="${itemId}"]`);
-        if (!row) return;
-
-        // 1) Обновляем количество
-        const quantityInput = row.querySelector('.quantity-input');
-        if (quantityInput) {
-            quantityInput.value = newQuantity;
-            quantityInput.dataset.currentQuantity = newQuantity;
-        }
-
-        const priceContainer = row.querySelector('.price-per-unit');
-        if (priceContainer) {
-            // Подготовим форматированные цены
-            const formattedRegular = formatPrice(response.regular_price);
-            const formattedWholesale = response.wholesale_price
-                ? formatPrice(response.wholesale_price)
-                : null;
-
-            if (response.is_wholesale && formattedWholesale) {
-                priceContainer.innerHTML = `
-                    <span class="line-through text-gray-400">${formattedRegular}</span>
-                    <span class="text-green-600 font-medium">
-                        ${formattedWholesale}/шт
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">ОПТ</span>
-                    </span>
-                `;
-            } else {
-                priceContainer.innerHTML = `
-                    <span class="text-gray-600">${formattedRegular}/шт</span>
-                `;
-            }
-            // Кратковременная анимация
-            priceContainer.classList.add('price-change');
-            setTimeout(() => {
-                priceContainer.classList.remove('price-change');
-            }, 300);
-        }
-
-        const itemTotalEl = row.querySelector('.item-total-value');
-        if (itemTotalEl) {
-            let formattedItemTotal = parseFloat(response.item_total)
-                .toFixed(2)
-                .replace('.', ',');
-            itemTotalEl.textContent = `${formattedItemTotal} ₸`;
-        }
-
-    }   
-    
-    // Вспомогательная функция для отправки POST-запросов с использованием Fetch API
-    function postData(url, data) {
-        return fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams(data)
-        })
-        .then(response => response.json());
+    // Update item total
+    const itemTotalEl = row.querySelector('.item-total-value');
+    if (itemTotalEl) {
+      let parsed = parseFloat(response.item_total);
+      let formattedItemTotal = parsed % 1 === 0 ? parsed.toFixed(0) : parsed.toFixed(2);
+      formattedItemTotal = formattedItemTotal.replace('.', ',');
+      itemTotalEl.textContent = `${formattedItemTotal} ₸`;
     }
+  }
 
-    // Обработка кнопки "уменьшить" количество товара
-    document.querySelectorAll('.minus-btn').forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const itemId = this.dataset.itemId;
-            postData("{% url 'update_cart_quantity' %}", {
-                csrfmiddlewaretoken: csrfToken,
-                item_id: itemId,
-                action: 'minus'
-            })
-            .then(response => {
-                if (response.success) {
-                    if (response.quantity === 0) {
-                        // Если количество стало 0, удаляем строку товара
-                        const row = document.querySelector(`[data-item-id="${itemId}"]`);
-                        if (row) {
-                            row.remove();
-                        }
-                    } else {
-                        updateRow(itemId, response.quantity, response.item_total, response);
-                    }
-                    updateCartTotal(response.cart_total);
-                }
-            })
-            .catch(error => {
-                console.error("Ошибка при уменьшении количества: ", error);
-            });
+  // Clear cart
+  const clearCartBtn = document.getElementById('clear-cart-btn');
+  if (clearCartBtn) {
+    clearCartBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const response = await fetch("{% url 'clear_cart' %}", {
+          method: "POST",
+          headers: {"Content-Type": "application/x-www-form-urlencoded"},
+          body: new URLSearchParams({csrfmiddlewaretoken: csrfToken})
         });
+        const json = await response.json();
+        if (json.success) {
+          const cartContainer = document.getElementById('cart-container');
+          if (cartContainer) {
+            const categoryUrl = "{% url 'category' %}";
+            cartContainer.innerHTML = `
+            <div class="text-center py-16 space-y-6">
+              <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+                <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
+              <a href="${categoryUrl}"
+                 class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
+                Перейти в каталог
+              </a>
+            </div>`;
+          }
+          updateCartTotal(0);
+        }
+      } catch (error) {
+        console.error("Ошибка при очистке корзины: ", error);
+      }
     });
+  }
 
-    // Обработка кнопки "увеличить" количество товара
-    document.querySelectorAll('.plus-btn').forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const itemId = this.dataset.itemId;
-            postData("{% url 'update_cart_quantity' %}", {
-                csrfmiddlewaretoken: csrfToken,
-                item_id: itemId,
-                action: 'plus'
-            })
-            .then(response => {
-                if (response.success) {
-                    updateRow(itemId, response.quantity, response.item_total, response);
-                    updateCartTotal(response.cart_total);
-                }
-            })
-            .catch(error => {
-                console.error("Ошибка при увеличении количества: ", error);
-            });
-        });
-    });
-
-    // Обработка изменения количества вручную (input)
-    document.querySelectorAll('.quantity-input').forEach(function(input) {
-        input.addEventListener('change', function(e) {
-            const itemId = this.dataset.itemId;
-            let newQuantity = parseInt(this.value);
-            if (isNaN(newQuantity) || newQuantity < 1) {
-                // Если значение некорректно, сбрасываем на предыдущее значение
-                this.value = this.dataset.currentQuantity;
-                return;
-            }
-            postData("{% url 'update_cart_quantity' %}", {
-                csrfmiddlewaretoken: csrfToken,
-                item_id: itemId,
-                action: 'set',
-                quantity: newQuantity
-            })
-            .then(response => {
-                if (response.success) {
-                    updateRow(itemId, response.quantity, response.item_total, response);
-                    updateCartTotal(response.cart_total);
-                }
-            })
-            .catch(error => {
-                console.error("Ошибка при изменении количества: ", error);
-            });
-        });
-    });
-
-    // Обработка удаления товара из корзины
-    document.querySelectorAll('.remove-btn').forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const itemId = this.dataset.itemId;
-            postData("{% url 'remove_cart_item_ajax' %}", {
-                csrfmiddlewaretoken: csrfToken,
-                item_id: itemId
-            })
-            .then(response => {
-                if (response.success) {
-                    const row = document.querySelector(`[data-item-id="${itemId}"]`);
-                    if (row) {
-                        row.remove();
-                    }
-                    updateCartTotal(response.cart_total);
-                }
-            })
-            .catch(error => {
-                console.error("Ошибка при удалении товара: ", error);
-            });
-        });
-    });
-
-    // Обработка кнопки "Очистить корзину"
-    const clearCartBtn = document.getElementById('clear-cart-btn');
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            postData("{% url 'clear_cart' %}", {
-                csrfmiddlewaretoken: csrfToken
-            })
-            .then(response => {
-                if (response.success) {
-                    const cartContainer = document.getElementById('cart-container');
-                    if (cartContainer) {
-                        const categoryUrl = "{% url 'category' %}";
-                        cartContainer.innerHTML = `
-                            <div class="text-center py-16 space-y-6">
-                                <div class="mx-auto w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
-                                    <svg class="w-20 h-20 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-gray-600 text-xl font-medium">Ваша корзина пуста</p>
-                                <a href="${categoryUrl}"
-                                   class="inline-block px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg">
-                                    Перейти в каталог
-                                </a>
-                            </div>
-                        `;
-                    }
-                    updateCartTotal("0");
-                }
-            })
-            .catch(error => {
-                console.error("Ошибка при очистке корзины: ", error);
-            });
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const orderLink = document.getElementById('order-link');
-    const messageContainer = document.getElementById('order-message');
-    
+  // Prevent ordering if total < 5000
+  const orderLink = document.getElementById('order-link');
+  if (orderLink) {
     orderLink.addEventListener('click', function(e) {
-        // Читаем актуальную сумму из элемента cart-total
-        const cartTotalEl = document.getElementById('cart-total');
-        // Удаляем лишние символы, например, " ₸" и заменяем запятую на точку для parseFloat
-        const totalText = cartTotalEl.textContent.replace('₸', '').trim().replace(',', '.');
-        const currentTotal = parseFloat(totalText);
-        
-        if (currentTotal < 5000) {
-            e.preventDefault(); // Предотвращаем переход по ссылке
-            messageContainer.textContent = "Минимальная сумма заказа должна быть не менее 5000 ₸";
-            messageContainer.style.display = "block";
-        }
+      const cartTotalEl = document.getElementById('cart-total');
+      if (!cartTotalEl) return;
+      // Convert text like "4,500 ₸" to float
+      const totalText = cartTotalEl.textContent.replace('₸', '').trim().replace(',', '.');
+      const currentTotal = parseFloat(totalText);
+
+      if (currentTotal < 5000) {
+        e.preventDefault();
+        const messageContainer = document.getElementById('order-message');
+        messageContainer.textContent = "Минимальная сумма заказа должна быть не менее 5000 ₸";
+        messageContainer.style.display = "block";
+      }
     });
+  }
 });
 
-
+// (Optional) If you reuse a "changeMainImage" function:
+function changeMainImage(e, url) {
+  const mainImg = document.getElementById('main-image');
+  if (!mainImg) return;
+  mainImg.style.opacity = '0';
+  setTimeout(() => {
+    mainImg.src = url;
+    mainImg.style.opacity = '1';
+  }, 300);
+  document.querySelectorAll('[onclick^="changeMainImage"]').forEach(btn => {
+    btn.classList.remove('border-blue-500');
+    btn.classList.add('border-gray-200');
+  });
+  e.currentTarget.classList.add('border-blue-500');
+  e.currentTarget.classList.remove('border-gray-200');
+}
 </script>
-    
 {% endblock %}

@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
     <!-- Блок с информацией о минимальной сумме заказа -->
@@ -9,10 +8,13 @@
             <!-- Иконка -->
             <div class="shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0
+                             a2 2 0 100 4 2 2 0 000-4zm-8 2
+                             a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
             </div>
-            
+
             <!-- Текст -->
             <div class="text-center sm:text-left">
                 <p class="text-lg font-semibold text-gray-700 mb-1">
@@ -24,25 +26,25 @@
                 </p>
             </div>
         </div>
-        
     </div>
 
     <h1 class="text-3xl font-bold text-gray-900 mb-6">Оформление заказа</h1>
 
     <form method="post" action="{% url 'order' %}" class="space-y-6" id="order-form">
         {% csrf_token %}
-        
+
         <!-- Customer Info Section -->
         <div class="bg-white shadow-sm rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-6 text-gray-800">Контактная информация</h2>
-            
+
             <div class="grid grid-cols-1 gap-4">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                         Имя <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="name" name="name" required
-                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
+                                  focus:ring-blue-500 focus:border-blue-500"
                            placeholder="Ваше имя">
                 </div>
 
@@ -51,7 +53,8 @@
                         Email <span class="text-red-500">*</span>
                     </label>
                     <input type="email" id="email" name="email" required
-                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
+                                  focus:ring-blue-500 focus:border-blue-500"
                            placeholder="example@mail.ru">
                 </div>
 
@@ -60,7 +63,8 @@
                         Телефон <span class="text-red-500">*</span>
                     </label>
                     <input type="tel" id="phone" name="phone" required
-                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
+                                  focus:ring-blue-500 focus:border-blue-500"
                            placeholder="+7 999 999-99-99">
                 </div>
 
@@ -69,7 +73,8 @@
                         Адрес доставки <span class="text-red-500">*</span>
                     </label>
                     <textarea id="address" name="address" required rows="2"
-                              class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
+                                     focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Город, улица, дом, квартира"></textarea>
                 </div>
 
@@ -78,7 +83,8 @@
                         Комментарий к заказу
                     </label>
                     <textarea id="comment" name="comment" rows="2"
-                              class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
+                                     focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Дополнительные пожелания"></textarea>
                 </div>
             </div>
@@ -87,38 +93,66 @@
         <!-- Order Summary Section -->
         <div class="bg-white shadow-sm rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-6 text-gray-800">Состав заказа</h2>
-            
+
             <div class="space-y-4 mb-6">
                 {% for item in cart_items %}
-                <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-                    <div>
-                        <h3 class="font-medium text-gray-900">{{ item.product.name }}</h3>
-                        <p class="text-sm text-gray-500">
-                            {{ item.quantity }} {{ item.product.get_unit_display }} × 
-                            {% if item.quantity >= 100 and item.product.wholesale_price %}
-                                <span class="line-through text-gray-400">{{ item.product.price }}₸</span>
-                                <span class="text-green-600">{{ item.product.wholesale_price }}₸</span>
-                            {% else %}
-                                {{ item.product.price }}₸
-                            {% endif %}
-                            /{{ item.product.get_unit_display }}
-                        </p>
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <div>
+                            <!-- Название товара -->
+                            <h3 class="font-medium text-gray-900">
+                                {% if item.product_variant %}
+                                    {{ item.product_variant.product.name }}
+                                {% else %}
+                                    "Без варианта"
+                                {% endif %}
+                            </h3>
+
+                            <!-- Цвет и размер (если есть) -->
+                            <p class="text-sm text-gray-500">
+                                {% if item.product_variant and item.product_variant.color %}
+                                    Цвет: {{ item.product_variant.color.color }}
+                                {% endif %}
+                                {% if item.product_variant and item.product_variant.size %}
+                                    {% if item.product_variant.color %} • {% endif %}
+                                    Размер: {{ item.product_variant.size.size }}
+                                {% endif %}
+                            </p>
+
+                            <!-- Цена за единицу * Количество, с проверкой на опт -->
+                            <p class="text-sm text-gray-500">
+                                {{ item.quantity }} {{ item.product_variant.product.get_unit_display }} ×
+                                {% if item.quantity >= 100 and item.product_variant.product.wholesale_prices.all %}
+                                    <!-- Пример: если больше 100, показываем оптовую (если есть) -->
+                                    {% if item.product_variant.product.wholesale_prices.all|length %}
+                                      <span class="line-through text-gray-400">
+                                        {{ item.product_variant.product.price|floatformat:0 }} ₸
+                                      </span>
+                                      <span class="text-green-600">
+                                        {{ item.product_variant.product.wholesale_prices.all.0.price|floatformat:0 }} ₸
+                                      </span>
+                                    {% else %}
+                                      {{ item.product_variant.product.price|floatformat:0 }} ₸
+                                    {% endif %}
+                                {% else %}
+                                  {{ item.product_variant.product.price|floatformat:0 }} ₸
+                                {% endif %}
+                                /{{ item.product_variant.product.get_unit_display }}
+                            </p>
+                        </div>
+
+                        <!-- Подсчёт итоговой стоимости -->
+                        <span class="font-medium text-gray-900">
+                            {{ item.total_price|floatformat:0 }}₸
+                        </span>
                     </div>
-                    <span class="font-medium text-gray-900">
-                        {% if item.quantity >= 100 and item.product.wholesale_price %}
-                            {% widthratio item.product.wholesale_price 1 item.quantity as item_total %}
-                        {% else %}
-                            {% widthratio item.product.price 1 item.quantity as item_total %}
-                        {% endif %}
-                        {{ item_total }},00 ₸
-                    </span>                    
-                </div>
                 {% endfor %}
             </div>
 
             <div class="flex justify-between items-center bg-blue-50 rounded-lg p-4">
                 <span class="font-bold text-gray-800">Общая сумма:</span>
-                <span class="text-2xl font-bold text-blue-600">{{ total_price }}₸</span>
+                <span class="text-2xl font-bold text-blue-600">
+                    {{ total_price|floatformat:0 }}₸
+                </span>
             </div>
         </div>
 
@@ -135,6 +169,4 @@
         </div>
     </form>
 </div>
-
-
 {% endblock %}
