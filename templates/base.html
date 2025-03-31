@@ -22,62 +22,65 @@
 <body class="font-sans antialiased">
   <!-- Header -->
   <header class="bg-white shadow-lg fixed w-full z-10">
-    <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="{% url 'home' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
-        Samal Trade and Promotion
-      </a>
-        <!-- Desktop Navigation -->
-      <div class="hidden md:flex space-x-8">
-        <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a>
-        <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
-        <a href="{% url 'cart_detail' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Корзина</a>
-        <a href="{% url 'liked_products' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Избранное</a>
-        <a href="{% url 'contact' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Контакты</a>
-        <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900 hover-transition">О нас</a>
-      </div>
-      <!-- Hamburger Menu Button (Mobile) -->
-      <button id="mobile-menu-button" class="md:hidden focus:outline-none">
-        <svg class="w-6 h-6 text-gray-800 hover:text-gray-600 hover-transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-    </nav>
-    <!-- Mobile Navigation Menu -->
-    <div id="mobile-menu" class="md:hidden hidden">
-      <div class="container mx-auto px-6 py-4">
-        <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a>
-        <a href="{% url 'category' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Каталог</a>
-        <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
-        <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
-        <a href="{% url 'contact' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Контакты</a>
-        <a href="{% url 'about' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">О нас</a>
+  <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="{% url 'home' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
+      Samal Trade and Promotion
+    </a>
+    <!-- Desktop Navigation (показывается только на больших экранах) -->
+    <div class="hidden lg:flex space-x-8">
+      <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a>
+      <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
+      <a href="{% url 'cart_detail' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Корзина</a>
+      <a href="{% url 'liked_products' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Избранное</a>
+      <a href="{% url 'contact' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Контакты</a>
+      <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900 hover-transition">О нас</a>
+    </div>
+    <!-- Hamburger Menu Button (показывается на мобильных и планшетах) -->
+    <button id="mobile-menu-button" class="lg:hidden focus:outline-none">
+      <svg class="w-6 h-6 text-gray-800 hover:text-gray-600 hover-transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </nav>
+  <!-- Mobile Navigation Menu (для мобильных и планшетов) -->
+  <div id="mobile-menu" class="lg:hidden hidden">
+    <div class="container mx-auto px-6 py-4">
+      <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a>
+      <a href="{% url 'category' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Каталог</a>
+      <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
+      <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
+      <a href="{% url 'contact' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Контакты</a>
+      <a href="{% url 'about' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">О нас</a>
       </div>
     </div>
   </header>
-  {% if messages %}
-  <script>
-    {% for message in messages %}
-    Toastify({
-      text: "{{ message }}",
-      duration: 3000,
-      close: true,
-      gravity: "top",      // top или bottom
-      position: "right",   // left, center или right
-      backgroundColor: "{% if 'error' in message.tags %}#f56565{% else %}#48bb78{% endif %}",
-      style: {
-        top: "80px",      // смещение от верхней части окна, чтобы не накрывать header
-        padding: "20px",  // внутренний отступ
-        borderRadius: "8px" // можно добавить скругление, если нужно
-      }
-    }).showToast();
-    {% endfor %}
-  </script>
-  {% endif %}
+
+  
 
 
   <!-- Main Content -->
   <main class="container mx-auto px-6 pt-24 pb-16">
+
     {% block content %}
+    {% if messages %}
+    <script>
+      {% for message in messages %}
+      Toastify({
+        text: "{{ message }}",
+        duration: 3000,
+        close: true,
+        gravity: "top",      // top или bottom
+        position: "right",   // left, center или right
+        backgroundColor: "{% if 'error' in message.tags %}#f56565{% else %}#48bb78{% endif %}",
+        style: {
+          top: "80px",      // смещение от верхней части окна, чтобы не накрывать header
+          padding: "20px",  // внутренний отступ
+          borderRadius: "8px" // можно добавить скругление, если нужно
+        }
+      }).showToast();
+      {% endfor %}
+    </script>
+    {% endif %}
     <!-- Page-specific content goes here -->
     {% endblock %}
   </main>
