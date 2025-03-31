@@ -37,9 +37,15 @@
             <div class="group relative bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
                 <!-- Изображение и оверлей при наведении -->
                 <div class="relative h-64 overflow-hidden bg-blue-600">
-                    <img src="{{ category.image.url }}"
-                         alt="{{ category.name }}"
-                         class="w-full h-full object-cover transform group-hover:scale-105 transition duration-300">
+                    {% if category.image %}
+                        <img src="{{ category.image.url }}"
+                             alt="{{ category.name }}"
+                             class="w-full h-full object-cover transform group-hover:scale-105 transition duration-300">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span class="text-gray-500">Изображение не доступно</span>
+                        </div>
+                    {% endif %}
                     <div class="absolute inset-0 bg-gradient-to-t from-gray-900 opacity-0 group-hover:opacity-20 transition duration-300"></div>
                 </div>
                 <!-- Контент карточки -->

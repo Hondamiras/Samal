@@ -238,6 +238,13 @@ def liked_products(request):
     likes = Like.objects.filter(session_key=session_key) if session_key else []
     return render(request, 'samal/liked_products.html', {'likes': likes})
 
+def remove_favorite(request, slug):
+    if request.method == "POST":
+        # Предполагаем, что у вас есть логика, связанная с session_key или пользователем
+        like = get_object_or_404(Like, product__slug=slug)
+        like.delete()
+        return JsonResponse({'success': True, 'message': 'Товар удален из избранного'})
+    return JsonResponse({'success': False, 'message': 'Метод POST обязателен'}, status=405)
 
 # =====================================================
 # Функции для работы с корзиной
@@ -277,14 +284,32 @@ def add_to_cart(request, product_slug):
 
     if variants:
         for variant_data in variants:
+            variant = variant_data['variant']
+            quantity_to_add = variant_data['quantity']
+            # Проверяем, есть ли уже данный вариант в корзине
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
-                product_variant=variant_data['variant'],
-                defaults={'quantity': variant_data['quantity']}
+                product_variant=variant,
+                defaults={'quantity': 0}
             )
-            if not created:
-                cart_item.quantity += variant_data['quantity']
-                cart_item.save()
+            new_quantity = cart_item.quantity + quantity_to_add
+
+            # Если итоговое количество превышает доступное, возвращаем ошибку
+            if new_quantity > variant.quantity:
+                available_to_add = variant.quantity - cart_item.quantity
+                return JsonResponse({
+                    'success': False,
+                    'message': (
+                        f"Невозможно добавить {quantity_to_add} шт. для варианта "
+                        f"{variant.product.name} (цвет: {variant.color}, размер: {variant.size}). "
+                        f"Доступно для добавления: {available_to_add if available_to_add > 0 else 0}."
+                    )
+                }, status=400)
+
+            # Обновляем количество
+            cart_item.quantity = new_quantity
+            cart_item.save()
+
         return JsonResponse({
             'success': True,
             'message': 'Варианты успешно добавлены в корзину'
@@ -302,15 +327,26 @@ def add_to_cart(request, product_slug):
         return JsonResponse({'success': False, 'message': 'Выберите цвет и размер'}, status=400)
 
     variant = get_object_or_404(ProductVariant, product=product, color_id=color_id, size_id=size_id)
-
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         product_variant=variant,
-        defaults={'quantity': quantity}
+        defaults={'quantity': 0}
     )
-    if not created:
-        cart_item.quantity += quantity
-        cart_item.save()
+    new_quantity = cart_item.quantity + quantity
+
+    if new_quantity > variant.quantity:
+        available_to_add = variant.quantity - cart_item.quantity
+        return JsonResponse({
+            'success': False,
+            'message': (
+                f"Невозможно добавить {quantity} шт. для варианта "
+                f"{variant.product.name} (цвет: {variant.color}, размер: {variant.size}). "
+                f"Доступно для добавления: {available_to_add if available_to_add > 0 else 0}."
+            )
+        }, status=400)
+
+    cart_item.quantity = new_quantity
+    cart_item.save()
 
     return JsonResponse({
         'success': True,

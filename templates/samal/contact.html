@@ -2,115 +2,136 @@
 
 {% block content %}
 {% block title %}Контакты{% endblock %}
+
 <!-- Hero Section -->
 <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-12 sm:py-16 mb-12">
-    <div class="container mx-auto px-4 sm:px-6 md:px-8 text-center">
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 animate-slide-in">
-            Свяжитесь с нами
-        </h1>
-        <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-            Есть вопросы или отзывы? Мы всегда рады помочь!
-        </p>
-    </div>
+  <div class="container mx-auto px-4 sm:px-6 md:px-8 text-center">
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 animate-slide-in">
+      Свяжитесь с нами
+    </h1>
+    <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+      Если у вас возникли вопросы или предложения, заполните форму, и мы свяжемся с вами в ближайшее время.
+    </p>
+  </div>
 </section>
 
 <!-- Contact Section -->
 <div class="container mx-auto px-4 sm:px-6 md:px-8 mb-12 sm:mb-16">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <!-- Contact Form -->
-        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8">
-            <form method="post" id="contactForm" class="space-y-6" novalidate>
-                {% csrf_token %}
-                <!-- Поле Имя -->
-                <div class="relative">
-                  {{ form.name }}
-                  <label for="name">
-                  </label>
-                  <svg class="w-5 h-5 text-gray-400 absolute right-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
-          
-                <!-- Поле Email -->
-                <div class="relative">
-                  {{ form.email }}
-                  <label for="email">
-                  </label>
-                  <svg class="w-5 h-5 text-gray-400 absolute right-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-          
-                <!-- Поле Сообщение -->
-                <div class="relative">
-                  {{ form.message }}
-                  <label for="message">
-                  </label>
-                </div>
-          
-                <!-- Кнопка Отправки -->
-                <button type="submit"
-                  class="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
-                  Отправить сообщение
-                </button>
-              </form>
-
-            <!-- Success Message -->
-            <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="font-medium">Сообщение успешно отправлено!</span>
-                </div>
-            </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+    
+    <!-- Contact Form -->
+    <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+      <form method="post" id="contactForm" class="space-y-6" novalidate>
+        {% csrf_token %}
+        <!-- Имя -->
+        <div class="relative">
+          {{ form.name }}
+          <label for="name" class="sr-only">Имя</label>
+          <svg class="w-5 h-5 text-gray-400 absolute right-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
         </div>
 
-        <!-- Contact Info -->
-        <div class="space-y-8">
-            <!-- Блок с графиком работы -->
-            <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8">
-              <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">График работы</h2>
-              <div class="space-y-2 text-gray-600">
-                <div class="flex items-center justify-between">
-                  <span>Понедельник</span>
-                  <span>09:00 - 18:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Вторник</span>
-                  <span>09:00 - 18:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Среда</span>
-                  <span>09:00 - 18:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Четверг</span>
-                  <span>09:00 - 18:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Пятница</span>
-                  <span>09:00 - 18:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Суббота</span>
-                  <span>09:00 - 13:00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span>Воскресенье</span>
-                  <span>Выходной</span>
-                </div>
-              </div>
-              <p class="mt-4 text-sm text-gray-400">* Время указано для региона: Казахстан, Алматы</p>
-            </div>
-          </div>
-          
+        <!-- Email -->
+        <div class="relative">
+          {{ form.email }}
+          <label for="email" class="sr-only">Email</label>
+          <svg class="w-5 h-5 text-gray-400 absolute right-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+
+        <!-- Сообщение -->
+        <div class="relative">
+          {{ form.message }}
+          <label for="message" class="sr-only">Сообщение</label>
+        </div>
+
+        <!-- Подтверждение "Я не робот" -->
+        <div class="flex items-center">
+          <input type="checkbox" id="humanCheck" name="humanCheck" required class="mr-2">
+          <label for="humanCheck" class="text-gray-700">Я подтверждаю, что я не робот</label>
+        </div>
+
+        <!-- Кнопка отправки -->
+        <button type="submit"
+                id="submitButton"
+                disabled
+                class="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          Отправить сообщение
+        </button>
+      </form>
+
+      <!-- Сообщение об успешной отправке -->
+      <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span class="font-medium">Сообщение успешно отправлено!</span>
+        </div>
+      </div>
     </div>
+    
+    <!-- Контактная информация -->
+    <div class="space-y-8">
+      <!-- График работы -->
+      <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">График работы</h2>
+        <div class="space-y-2 text-gray-600">
+          <div class="flex items-center justify-between">
+            <span>Понедельник</span>
+            <span>09:00 - 18:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Вторник</span>
+            <span>09:00 - 18:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Среда</span>
+            <span>09:00 - 18:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Четверг</span>
+            <span>09:00 - 18:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Пятница</span>
+            <span>09:00 - 18:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Суббота</span>
+            <span>09:00 - 13:00</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Воскресенье</span>
+            <span>Выходной</span>
+          </div>
+        </div>
+        <p class="mt-4 text-sm text-gray-400">* Время указано для региона: Казахстан, Алматы</p>
+      </div>
+    </div>
+    
+  </div>
 </div>
+
+<!-- Скрипт для активации кнопки отправки при выборе чекбокса -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const humanCheck = document.getElementById("humanCheck");
+    const submitButton = document.getElementById("submitButton");
+    // Изначально кнопка заблокирована
+    submitButton.disabled = true;
+    // При изменении состояния чекбокса переключаем доступность кнопки
+    humanCheck.addEventListener("change", function() {
+      submitButton.disabled = !this.checked;
+    });
+  });
+</script>
 {% endblock %}

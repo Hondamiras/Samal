@@ -95,19 +95,23 @@
         <div class="mt-2 flex flex-col items-end space-y-1">
           <!-- Unit Price -->
           <div class="price-per-unit" data-unit="{{ item.product_variant.product.get_unit_display }}">
-            {% if item.quantity >= 100 and item.product_variant.product.wholesale_prices.all %}
-              <div class="flex flex-col sm:flex-row items-end gap-1">
-                <span class="line-through text-gray-400">{{ item.product_variant.product.price|floatformat:0 }} ₸</span>
-                <span class="text-green-600 font-medium flex items-center gap-1">
-                  {{ item.product_variant.product.wholesale_prices.all.0.price|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
-                  <span class="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">ОПТ</span>
-                </span>
-              </div>
-            {% else %}
-              <span class="text-gray-600">
-                {{ item.product_variant.product.price|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
+            {% if item.price_to_use < item.product_variant.product.price %}
+            <!-- Значит, цена_to_use действительно ниже базовой — это опт -->
+            <div class="flex flex-col sm:flex-row items-end gap-1">
+              <span class="line-through text-gray-400">
+                {{ item.product_variant.product.price|floatformat:0 }} ₸
               </span>
-            {% endif %}
+              <span class="text-green-600 font-medium flex items-center gap-1">
+                {{ item.price_to_use|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
+                <span class="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">ОПТ</span>
+              </span>
+            </div>
+          {% else %}
+            <!-- Цена совпадает с обычной, значит нет подходящей оптовой цены -->
+            <span class="text-gray-600">
+              {{ item.price_to_use|floatformat:0 }} ₸/{{ item.product_variant.product.get_unit_display }}
+            </span>
+          {% endif %}
           </div>
           <!-- Total Price for the item -->
           <div class="text-base font-semibold text-gray-900 item-total-value">

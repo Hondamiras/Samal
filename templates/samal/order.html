@@ -121,17 +121,17 @@
                             <!-- Цена за единицу * Количество, с проверкой на опт -->
                             <p class="text-sm text-gray-500">
                                 {{ item.quantity }} {{ item.product_variant.product.get_unit_display }} ×
-                                {% if item.quantity >= 100 and item.product_variant.product.wholesale_prices.all %}
+                                {% if item.quantity >= 1 and item.product_variant.product.wholesale_prices.all %}
                                     <!-- Пример: если больше 100, показываем оптовую (если есть) -->
-                                    {% if item.product_variant.product.wholesale_prices.all|length %}
-                                      <span class="line-through text-gray-400">
-                                        {{ item.product_variant.product.price|floatformat:0 }} ₸
-                                      </span>
-                                      <span class="text-green-600">
-                                        {{ item.product_variant.product.wholesale_prices.all.0.price|floatformat:0 }} ₸
-                                      </span>
+                                    {% if item.price_to_use < item.product_variant.product.price %}
+                                    <span class="line-through text-gray-400">{{ item.product_variant.product.price|floatformat:0 }} ₸</span>
+                                    <span class="text-green-600">
+                                        {{ item.price_to_use|floatformat:0 }} ₸
+                                    </span>
                                     {% else %}
-                                      {{ item.product_variant.product.price|floatformat:0 }} ₸
+                                    <span>
+                                        {{ item.price_to_use|floatformat:0 }} ₸
+                                    </span>
                                     {% endif %}
                                 {% else %}
                                   {{ item.product_variant.product.price|floatformat:0 }} ₸

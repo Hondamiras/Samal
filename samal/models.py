@@ -169,13 +169,17 @@ class CartItem(models.Model):
 
     @property
     def price_to_use(self):
-        # Ищем оптовую цену, где пороговое количество меньше или равно количеству в корзине
-        wholesale = self.product_variant.product.wholesale_prices.filter(
-            quantity__lte=self.quantity
-        ).order_by('-quantity').first() if self.product_variant else None
-        if wholesale:
-            return wholesale.price
-        return self.product_variant.product.price if self.product_variant else 0
+        if self.product_variant:
+            # Фильтруем оптовые цены: выбираем те записи,
+            # где значение поля quantity (минимальное количество) меньше или равно количеству в корзине.
+            wholesale = self.product_variant.product.wholesale_prices.filter(
+                quantity__lte=self.quantity
+            ).order_by('-quantity').first()
+            if wholesale:
+                return wholesale.price
+            return self.product_variant.product.price
+        return 0
+
 
 
     @property

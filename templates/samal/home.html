@@ -15,34 +15,13 @@
               </span>
             </h1>
             <p class="text-lg text-gray-600">
-              Создайте корпоративный стиль вместе с нами! Футболки, рубашки-поло, толстовки, свитшоты, кепки с вашим логотипом и без.</p>
-          </div>
-    
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-            {% for category in categories %}
-              <div class="relative group overflow-hidden rounded-xl shadow-lg transition-all hover:shadow-2xl bg-blue-600">
-                <a href="{% url 'category_detail' category.slug %}" class="block">
-                  <!-- Fixed height container for the image -->
-                  <div class="h-64 w-full">
-                    <img src="{{ category.image.url }}"
-                         alt="{{ category.name }}"
-                         class="w-full h-full object-cover transition-transform duration-300 transform group-hover:scale-110 group-hover:brightness-75">
-                  </div>
-                  <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-40 transition-all duration-300">
-                    <span class="text-white font-bold text-lg transition-colors duration-300">
-                      {{ category.name }}
-                    </span>
-                  </div>
-                </a>
-              </div>
-            {% endfor %}
-          </div>
+              Создайте корпоративный стиль вместе с нами! Футболки, рубашки-поло, толстовки, свитшоты, кепки с вашим логотипом и без.
+            </p>
           </div>
         </div>
       </div>
     </section>
     
-
     <!-- Features Grid -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
@@ -62,7 +41,7 @@
         </div>
       </div>
     </section>
-
+    
     <!-- Advantages Section -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
@@ -70,7 +49,7 @@
           <h2 class="text-3xl font-bold mb-4">Почему выбирают нас</h2>
           <p class="text-gray-600">Комплексный подход к созданию корпоративного стиля</p>
         </div>
-
+    
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <!-- Advantage 1 -->
           <div class="p-6 text-center hover:bg-gray-50 rounded-xl transition-colors">
@@ -83,7 +62,7 @@
             <h3 class="text-xl font-semibold mb-2">Скорость</h3>
             <p class="text-gray-600">Скорость производства на высоком уровне</p>
           </div>
-
+    
           <!-- Advantage 2 -->
           <div class="p-6 text-center hover:bg-gray-50 rounded-xl transition-colors">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -95,7 +74,7 @@
             <h3 class="text-xl font-semibold mb-2">Качество</h3>
             <p class="text-gray-600">Контроль качества на всех этапах производства</p>
           </div>
-
+    
           <!-- Advantage 3 -->
           <div class="p-6 text-center hover:bg-gray-50 rounded-xl transition-colors">
             <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -107,7 +86,7 @@
             <h3 class="text-xl font-semibold mb-2">Индивидуальность</h3>
             <p class="text-gray-600">Уникальный дизайн под требования вашего бренда</p>
           </div>
-
+    
           <!-- Advantage 4 -->
           <div class="p-6 text-center hover:bg-gray-50 rounded-xl transition-colors">
             <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">

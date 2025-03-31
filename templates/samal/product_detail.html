@@ -254,8 +254,7 @@
                   + Добавить ещё вариант
                 </button>
                 <button type="submit"
-                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors
-                               disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         aria-label="Добавить выбранные варианты в корзину">
                   Добавить в корзину
                 </button>
@@ -608,8 +607,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   /**
    * attachColorChangeHandler(variantBlock):
-   *   1) Waits for user to pick a color -> populates sizes
-   *   2) Waits for user to pick a size -> sets `max` for quantity if stock > 0
+   *   1) При выборе цвета заполняет список размеров
+   *   2) При выборе размера устанавливает атрибут max для количества, если stock > 0
    */
   function attachColorChangeHandler(variantBlock) {
     const colorSelect = variantBlock.querySelector('.color-select');
@@ -618,13 +617,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (!colorSelect || !sizeSelect || !quantityInput) return;
 
-    // Initially instruct user to choose color
+    // Изначально показываем сообщение для выбора цвета
     sizeSelect.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
 
-    // When color changes, we populate the sizes
+    // При смене цвета заполняем размеры
     colorSelect.addEventListener('change', function() {
       sizeSelect.innerHTML = '<option value="" disabled selected>-- Выберите размер --</option>';
-      // Remove any previous max
+      // Удаляем предыдущий атрибут max
       quantityInput.removeAttribute('max');
 
       const selectedColorID = this.value;
@@ -640,29 +639,27 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
       }
 
-      // Fill the size dropdown, store quantity in dataset
+      // Заполняем выпадающий список размеров, сохраняя количество в dataset
       sizesForColor.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.size_id;
-        opt.dataset.qty = item.quantity; // store the numeric stock
+        opt.dataset.qty = item.quantity;
         if (item.quantity > 0) {
           opt.textContent = `${item.size_name} (Осталось: ${item.quantity})`;
         } else if (item.quantity === 0) {
-          opt.textContent = `${item.size_name}`; // or "(Нет в наличии)"
+          opt.textContent = `${item.size_name}`;
         } else {
-          // quantity < 0 => unknown
-          opt.textContent = `${item.size_name}`; // e.g. "(неизвестно)"
+          opt.textContent = `${item.size_name}`;
         }
         sizeSelect.appendChild(opt);
       });
     });
 
-    // When size changes, update the quantity input's max
+    // При выборе размера обновляем атрибут max для поля количества
     sizeSelect.addEventListener('change', function() {
       const selectedOpt = sizeSelect.options[sizeSelect.selectedIndex];
       if (!selectedOpt) return;
       const qty = parseInt(selectedOpt.dataset.qty, 10);
-
       if (!isNaN(qty) && qty > 0) {
         quantityInput.setAttribute('max', qty);
       } else {
@@ -677,13 +674,27 @@ document.addEventListener("DOMContentLoaded", function() {
   const addVariantBtn = document.getElementById('add-variant');
   const maxVariants = 10;
 
-  // For the first block on page load
+  // Для первого блока при загрузке страницы
   if (variantsContainer) {
     const initialBlock = variantsContainer.querySelector('.variant-group');
     if (initialBlock) attachColorChangeHandler(initialBlock);
   }
 
-  // Submit the multi-variant form
+  // Функция переиндексации блоков после удаления
+  function reindexVariantBlocks() {
+    const variantBlocks = document.querySelectorAll('#variants-container .variant-group');
+    variantBlocks.forEach((block, index) => {
+      block.querySelectorAll('[id]').forEach(elem => {
+        // Заменяем цифры в id на новый индекс
+        elem.id = elem.id.replace(/\d+/, index);
+      });
+      block.querySelectorAll('[name]').forEach(elem => {
+        elem.name = elem.name.replace(/\d+/, index);
+      });
+    });
+  }
+
+  // Отправка формы много-вариантного добавления в корзину
   if (multiForm) {
     multiForm.addEventListener("submit", function(e) {
       e.preventDefault();
@@ -724,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Add new variant block
+  // Добавление нового блока варианта
   if (addVariantBtn && variantsContainer) {
     addVariantBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -744,11 +755,11 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
       }
 
-      // Clone the first variant block
+      // Клонируем первый блок варианта
       const templateBlock = variantGroups[0];
       const newBlock = templateBlock.cloneNode(true);
 
-      // Update IDs/names for the new block
+      // Обновляем атрибуты id и name для нового блока
       newBlock.querySelectorAll('[id]').forEach(elem => {
         elem.id = elem.id.replace(/\d+/, newIndex);
       });
@@ -756,12 +767,12 @@ document.addEventListener("DOMContentLoaded", function() {
         elem.name = elem.name.replace(/\d+/, newIndex);
       });
 
-      // Clear the new block's inputs
+      // Очищаем значения полей нового блока
       newBlock.querySelectorAll('input, select').forEach(elem => {
         if (elem.tagName.toLowerCase() === 'input') {
           if (elem.type === 'number') {
             elem.value = 1;
-            elem.removeAttribute('max'); // remove previous max
+            elem.removeAttribute('max');
           } else {
             elem.value = '';
           }
@@ -774,19 +785,20 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       });
 
-      // Re-attach remove-variant logic
+      // Привязываем обработчик кнопки удаления для нового блока
       const removeBtn = newBlock.querySelector('.remove-variant');
       if (removeBtn) {
         removeBtn.addEventListener('click', (e) => {
           e.preventDefault();
           newBlock.remove();
+          reindexVariantBlocks(); // Переиндексируем оставшиеся блоки
           if (variantsContainer.querySelectorAll('.variant-group').length < maxVariants) {
             addVariantBtn.disabled = false;
           }
         });
       }
 
-      // Append & attach color->size logic
+      // Добавляем новый блок и привязываем обработчик смены цвета и размера
       variantsContainer.appendChild(newBlock);
       attachColorChangeHandler(newBlock);
 
@@ -796,7 +808,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Remove variant block
+  // Обработчик удаления блока через делегирование (на случай, если кнопка не привязалась)
   if (variantsContainer) {
     variantsContainer.addEventListener('click', function(e) {
       if (e.target.classList.contains('remove-variant')) {
@@ -804,6 +816,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const block = e.target.closest('.variant-group');
         if (block) {
           block.remove();
+          reindexVariantBlocks();
         }
         const countNow = variantsContainer.querySelectorAll('.variant-group').length;
         if (countNow < maxVariants && addVariantBtn) {
