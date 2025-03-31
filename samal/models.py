@@ -4,6 +4,11 @@ class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
     slug = models.SlugField(max_length=255, unique=True, verbose_name='URL')
     image = models.ImageField(upload_to='category_images/', blank=True, null=True, verbose_name='Изображение')
+    TYPE_CHOICES = [
+        ('knitted_fabric', 'Трикотажное полотно'),
+        ('knitwear_product', 'Готовое изделие из трикотажа'),
+    ]
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='knitted_fabric', verbose_name='Тип продукта')
 
     def __str__(self):
         return self.name

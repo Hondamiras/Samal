@@ -78,8 +78,22 @@ def about(request):
 
 
 def category(request):
-    categories = get_list_or_404(Category)
-    context = {'categories': categories}
+    # Получаем все категории
+    categories = Category.objects.all()
+
+    # Если фильтр по типу передан, отфильтруем категории (либо товары)
+    product_type = request.GET.get('type')
+    if product_type:
+        # Фильтруем категории по типу продукта
+        categories = categories.filter(type=product_type)
+    
+    # Если также нужны товары для вывода, можно добавить запрос:
+    # products = Product.objects.filter(category__in=categories)
+    context = {
+        'categories': categories,
+        # 'products': products, если требуется вывод товаров
+        'sort_option': request.GET.get('sort'),
+    }
     return render(request, 'samal/category.html', context)
 
 
