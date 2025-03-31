@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}{{ category.name }}{% endblock %}
+
 {% block content %}
 <div class="bg-gray-50">
     <!-- Breadcrumb Navigation -->
@@ -27,7 +29,7 @@
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-12">
         <div class="lg:flex lg:gap-8">
-            <!-- Product Grid -->
+            <!-- Product Grid and Sorting -->
             <main class="flex-1">
                 <!-- Sorting Block -->
                 <div class="mb-8 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 w-full max-w-md mx-auto">
@@ -53,6 +55,7 @@
                 </div>
                 
                 <!-- Product List -->
+                {% if products %}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for product in products %}
                     <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
@@ -67,12 +70,10 @@
                             <div class="flex items-start justify-between gap-3 mb-2">
                                 <!-- Product Name and Availability -->
                                 <h3 class="flex-1 font-semibold text-gray-900 text-lg">
-                                    <a href="{% url 'product_detail' product.slug %}" 
-                                       class="hover:text-blue-600 transition-colors">
+                                    <a href="{% url 'product_detail' product.slug %}" class="hover:text-blue-600 transition-colors">
                                         {{ product.name }}
                                     </a>
                                 </h3>
-                                
                                 <!-- Availability Badge -->
                                 <div class="flex-shrink-0">
                                     {% if product.availability == 'in_stock' %}
@@ -112,7 +113,16 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+                {% else %}
+                <div class="text-center py-16">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">В данной категории пока нет товаров</h2>
+                    <p class="text-gray-600 mb-6">Попробуйте выбрать другую категорию или вернуться в каталог.</p>
+                    <a href="{% url 'category' %}" class="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                        Вернуться в каталог
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Pagination -->
                 {% if products.has_other_pages %}
                 <div class="mt-12 flex justify-center">
