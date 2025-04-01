@@ -9,12 +9,12 @@
     <nav class="bg-white shadow-sm">
         <div class="container mx-auto px-4 py-4">
             <ol class="flex items-center space-x-3 text-sm">
-                <li>
+                {% comment %} <li>
                     <a href="{% url 'home' %}" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
                         Главная
                     </a>
                 </li>
-                <li class="text-gray-400">/</li>
+                <li class="text-gray-400">/</li> {% endcomment %}
                 <li>
                     <a href="{% url 'category' %}" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
                         Каталог
@@ -26,138 +26,199 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-12">
-        <div class="lg:flex lg:gap-8">
-            <!-- Product Grid and Sorting -->
-            <main class="flex-1">
-                <!-- Sorting Block -->
-                <div class="mb-8 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 w-full max-w-md mx-auto">
-                    <div class="flex items-center justify-center">
-                        <form method="GET" class="relative w-full">
-                            <select name="sort"
-                                    class="w-full pl-4 pr-12 py-3 text-sm font-medium text-gray-700 border-2 border-gray-200 
-                                           hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 
-                                           focus:ring-offset-2 rounded-xl transition-all cursor-pointer appearance-none"
-                                    onchange="this.form.submit()">
-                                <option value=''>По умолчанию</option>
-                                <option value="price_asc" {% if sort_option == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
-                                <option value="price_desc" {% if sort_option == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
-                                <option value="newest" {% if sort_option == 'newest' %}selected{% endif %}>Новинки</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </form>
-                    </div>
+    <!-- Toggle Filter Button -->
+    <div class="container mx-auto px-4 py-4">
+        <button id="toggle-filter" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+            Показать фильтры
+        </button>
+    </div>
+
+    <!-- Filter Section (скрыт по умолчанию) -->
+    <div id="filter-section" class="hidden container mx-auto px-4 py-8">
+        <form method="GET" action="" class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white p-6 rounded-xl shadow-md">
+            <!-- Сортировка -->
+            <div class="col-span-1">
+                <label for="sort" class="block text-sm font-medium text-gray-700">Сортировать</label>
+                <select name="sort" id="sort" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">По умолчанию</option>
+                    <option value="price_asc" {% if sort_option == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                    <option value="price_desc" {% if sort_option == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                    <option value="newest" {% if sort_option == 'newest' %}selected{% endif %}>Новинки</option>
+                </select>
+            </div>
+
+            <!-- Фильтр по цене -->
+            <div class="col-span-1">
+                <label class="block text-sm font-medium text-gray-700">Цена</label>
+                <div class="flex space-x-2 mt-1">
+                    <input type="number" name="min_price" placeholder="От" value="{{ filters.min_price }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" name="max_price" placeholder="До" value="{{ filters.max_price }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                
-                <!-- Product List -->
-                {% if products %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for product in products %}
-                    <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
-                        <a href="{% url 'product_detail' product.slug %}" class="block overflow-hidden rounded-t-xl">
-                            <div class="relative h-80 overflow-hidden">
-                                <img src="{{ product.image.url }}" 
-                                     alt="{{ product.name }}"
-                                     class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
-                            </div>
-                        </a>
-                        <div class="p-5">
-                            <div class="flex items-start justify-between gap-3 mb-2">
-                                <!-- Product Name and Availability -->
-                                <h3 class="flex-1 font-semibold text-gray-900 text-lg">
-                                    <a href="{% url 'product_detail' product.slug %}" class="hover:text-blue-600 transition-colors">
-                                        {{ product.name }}
-                                    </a>
-                                </h3>
-                                <!-- Availability Badge -->
-                                <div class="flex-shrink-0">
-                                    {% if product.availability == 'in_stock' %}
-                                    <span class="inline-flex items-center py-1 pl-2 pr-2.5 rounded-full bg-green-50 text-green-700 text-sm font-medium">
-                                        <svg class="w-2.5 h-2.5 mr-1.5 shrink-0" fill="currentColor" viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3"/>
-                                        </svg>
-                                        {{ product.get_availability_display }}
-                                    </span>
-                                    {% else %}
-                                    <span class="inline-flex items-center py-1 pl-2 pr-2.5 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">
-                                        <svg class="w-2.5 h-2.5 mr-1.5 shrink-0" fill="currentColor" viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3"/>
-                                        </svg>
-                                        {{ product.get_availability_display }}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                
-                            <!-- Sales Type Badge -->
-                            <div class="mb-3">
-                                <span class="inline-flex items-center h-8 px-3 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
-                                    <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
-                                    </svg>
-                                    Оптом и в розницу
-                                </span>
-                            </div>
-                
-                            <div class="flex items-center justify-between">
-                                <span class="text-xl font-bold text-blue-600">
-                                    {{ product.price|floatformat:"-2" }} ₸
-                                </span>
-                            </div>
+            </div>
+
+            <!-- Фильтр по наличию -->
+            <div class="col-span-1">
+                <label for="availability" class="block text-sm font-medium text-gray-700">Наличие</label>
+                <select name="availability" id="availability" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" {% if not filters.availability %}selected{% endif %}>Все</option>
+                    <option value="in_stock" {% if filters.availability == 'in_stock' %}selected{% endif %}>В наличии</option>
+                    <option value="on_order" {% if filters.availability == 'on_order' %}selected{% endif %}>Под заказ</option>
+                </select>
+            </div>
+
+            <!-- Фильтр по цвету -->
+            <div class="col-span-1">
+                <label for="color" class="block text-sm font-medium text-gray-700">Цвет</label>
+                <input type="text" name="color" id="color" placeholder="Введите цвет" value="{{ filters.color }}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Фильтр по размеру -->
+            <div class="col-span-1">
+                <label for="size" class="block text-sm font-medium text-gray-700">Размер</label>
+                <input type="text" name="size" id="size" placeholder="Введите размер" value="{{ filters.size }}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Фильтр по полу -->
+            <div class="col-span-1">
+                <label for="gender" class="block text-sm font-medium text-gray-700">Пол</label>
+                <select name="gender" id="gender" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" {% if not filters.gender %}selected{% endif %}>Все</option>
+                    <option value="female" {% if filters.gender == 'female' %}selected{% endif %}>Женщины</option>
+                    <option value="male" {% if filters.gender == 'male' %}selected{% endif %}>Мужчины</option>
+                    <option value="kids" {% if filters.gender == 'kids' %}selected{% endif %}>Дети</option>
+                    <option value="unisex" {% if filters.gender == 'unisex' %}selected{% endif %}>Унисекс</option>
+                </select>
+            </div>
+
+            <!-- Кнопки: Применить и Сбросить -->
+            <div class="col-span-1 flex items-end space-x-2">
+                <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                    Применить
+                </button>
+                <a href="{% url 'category_detail' category.slug %}" class="w-full text-center px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-300">
+                    Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Product List -->
+    <div class="container mx-auto px-4 py-12">
+        {% if products %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for product in products %}
+            <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
+                <a href="{% url 'product_detail' product.slug %}" class="block overflow-hidden rounded-t-xl">
+                    <div class="relative h-80 overflow-hidden">
+                        <img src="{{ product.image.url }}" 
+                             alt="{{ product.name }}"
+                             class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
+                    </div>
+                </a>
+                <div class="p-5">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <!-- Product Name and Availability -->
+                        <h3 class="flex-1 font-semibold text-gray-900 text-lg">
+                            <a href="{% url 'product_detail' product.slug %}" class="hover:text-blue-600 transition-colors">
+                                {{ product.name }}
+                            </a>
+                        </h3>
+                        <div class="flex-shrink-0">
+                            {% if product.availability == 'in_stock' %}
+                            <span class="inline-flex items-center py-1 pl-2 pr-2.5 rounded-full bg-green-50 text-green-700 text-sm font-medium">
+                                <svg class="w-2.5 h-2.5 mr-1.5 shrink-0" fill="currentColor" viewBox="0 0 8 8">
+                                    <circle cx="4" cy="4" r="3"/>
+                                </svg>
+                                {{ product.get_availability_display }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center py-1 pl-2 pr-2.5 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">
+                                <svg class="w-2.5 h-2.5 mr-1.5 shrink-0" fill="currentColor" viewBox="0 0 8 8">
+                                    <circle cx="4" cy="4" r="3"/>
+                                </svg>
+                                {{ product.get_availability_display }}
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-16">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">В данной категории пока нет товаров</h2>
-                    <p class="text-gray-600 mb-6">Попробуйте выбрать другую категорию или вернуться в каталог.</p>
-                    <a href="{% url 'category' %}" class="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
-                        Вернуться в каталог
-                    </a>
-                </div>
-                {% endif %}
-
-                <!-- Pagination -->
-                {% if products.has_other_pages %}
-                <div class="mt-12 flex justify-center">
-                    <nav class="flex items-center space-x-2">
-                        {% if products.has_previous %}
-                        <a href="?page={{ products.previous_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
-                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                            ← Назад
-                        </a>
-                        {% endif %}
-
-                        {% for num in products.paginator.page_range %}
-                        {% if products.number == num %}
-                        <span class="px-4 py-2 border border-blue-600 bg-blue-600 text-white rounded-lg">
-                            {{ num }}
+        
+                    <!-- Sales Type Badge -->
+                    <div class="mb-3">
+                        <span class="inline-flex items-center h-8 px-3 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+                            <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
+                            </svg>
+                            Оптом и в розницу
                         </span>
-                        {% else %}
-                        <a href="?page={{ num }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
-                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                            {{ num }}
-                        </a>
-                        {% endif %}
-                        {% endfor %}
-
-                        {% if products.has_next %}
-                        <a href="?page={{ products.next_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}" 
-                           class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                            Вперед →
-                        </a>
-                        {% endif %}
-                    </nav>
+                    </div>
+        
+                    <div class="flex items-center justify-between">
+                        <span class="text-xl font-bold text-blue-600">
+                            {{ product.price|floatformat:"-2" }} ₸
+                        </span>
+                    </div>
                 </div>
-                {% endif %}
-            </main>
+            </div>
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center py-16">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">В данной категории пока нет товаров</h2>
+            <p class="text-gray-600 mb-6">Попробуйте выбрать другую категорию или изменить параметры фильтрации.</p>
+            <a href="{% url 'category' %}" class="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                Вернуться в каталог
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <div class="mt-12 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {% if products.has_previous %}
+                <a href="?page={{ products.previous_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}{% if filters.gender %}&gender={{ filters.gender }}{% endif %}{% if filters.color %}&color={{ filters.color }}{% endif %}{% if filters.size %}&size={{ filters.size }}{% endif %}{% if filters.min_price %}&min_price={{ filters.min_price }}{% endif %}{% if filters.max_price %}&max_price={{ filters.max_price }}{% endif %}{% if filters.availability %}&availability={{ filters.availability }}{% endif %}" 
+                   class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                    ← Назад
+                </a>
+                {% endif %}
+
+                {% for num in products.paginator.page_range %}
+                {% if products.number == num %}
+                <span class="px-4 py-2 border border-blue-600 bg-blue-600 text-white rounded-lg">
+                    {{ num }}
+                </span>
+                {% else %}
+                <a href="?page={{ num }}{% if sort_option %}&sort={{ sort_option }}{% endif %}{% if filters.gender %}&gender={{ filters.gender }}{% endif %}{% if filters.color %}&color={{ filters.color }}{% endif %}{% if filters.size %}&size={{ filters.size }}{% endif %}{% if filters.min_price %}&min_price={{ filters.min_price }}{% endif %}{% if filters.max_price %}&max_price={{ filters.max_price }}{% endif %}{% if filters.availability %}&availability={{ filters.availability }}{% endif %}" 
+                   class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                    {{ num }}
+                </a>
+                {% endif %}
+                {% endfor %}
+
+                {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}{% if sort_option %}&sort={{ sort_option }}{% endif %}{% if filters.gender %}&gender={{ filters.gender }}{% endif %}{% if filters.color %}&color={{ filters.color }}{% endif %}{% if filters.size %}&size={{ filters.size }}{% endif %}{% if filters.min_price %}&min_price={{ filters.min_price }}{% endif %}{% if filters.max_price %}&max_price={{ filters.max_price }}{% endif %}{% if filters.availability %}&availability={{ filters.availability }}{% endif %}" 
+                   class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                    Вперед →
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleFilterBtn = document.getElementById('toggle-filter');
+    const filterSection = document.getElementById('filter-section');
+    toggleFilterBtn.addEventListener('click', function() {
+        filterSection.classList.toggle('hidden');
+        if (filterSection.classList.contains('hidden')) {
+            toggleFilterBtn.textContent = 'Показать фильтры';
+        } else {
+            toggleFilterBtn.textContent = 'Скрыть фильтры';
+        }
+    });
+});
+</script>
 {% endblock %}

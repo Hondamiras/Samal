@@ -23,6 +23,13 @@ class Product(models.Model):
     slug = models.SlugField(max_length=255, unique=True, verbose_name='URL')
     image = models.ImageField(upload_to='product_images/', blank=True, null=True, verbose_name='Изображение')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', blank=True, null=True)
+    GENDER_CHOICES = [
+        ('unisex', 'Унисекс'),
+        ('male', 'Мужской'),
+        ('female', 'Женский'),
+        ('children', 'Детский'),
+    ]
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='unisex', verbose_name='Пол')
     UNIT_CHOICES = [
         ('pcs', 'шт'),
         ('kg', 'кг'),

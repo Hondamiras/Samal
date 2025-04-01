@@ -30,13 +30,14 @@
             <!-- Filter Section -->
             <div class="container mx-auto px-6">
                 <form method="GET" action="" class="max-w-md mx-auto">
-                    <div class="flex items-center gap-4">
+                    <!-- On mobile, stack elements; on small screens and up, display them in a row -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
                         <select name="type" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <option value="" {% if not request.GET.type %}selected{% endif %}>Все</option>
                             <option value="knitted_fabric" {% if request.GET.type == "knitted_fabric" %}selected{% endif %}>Трикотажное полотно</option>
                             <option value="knitwear_product" {% if request.GET.type == "knitwear_product" %}selected{% endif %}>Готовое изделие из трикотажа</option>
                         </select>
-                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">
                             Применить
                         </button>
                     </div>
@@ -74,7 +75,7 @@
                     </h2>
                     <!-- Обёртка с mt-auto «прижимает» кнопку вниз -->
                     <div class="mt-auto">
-                        <a href="{{ category.slug }}"
+                        <a href="category/{{ category.slug }}"
                            class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 group">
                             Посмотреть коллекцию
                             <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"

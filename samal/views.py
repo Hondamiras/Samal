@@ -101,7 +101,41 @@ def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
     products_list = Product.objects.filter(category=category)
     sort_option = request.GET.get('sort', '')
+    
+    # Получаем параметры фильтрации из GET-запроса
+    color = request.GET.get('color')           # например, "red"
+    size = request.GET.get('size')             # например, "M"
+    min_price = request.GET.get('min_price')   # например, "1000"
+    max_price = request.GET.get('max_price')   # например, "5000"
+    gender = request.GET.get('gender')         # например, "female", "male", "kids", "unisex"
+    avail = request.GET.get('availability')    # 'in_stock' или 'on_order'
 
+    # Фильтрация по цене
+    if min_price:
+        try:
+            products_list = products_list.filter(price__gte=float(min_price))
+        except ValueError:
+            pass
+    if max_price:
+        try:
+            products_list = products_list.filter(price__lte=float(max_price))
+        except ValueError:
+            pass
+
+    # Фильтрация по наличию
+    if avail in ['in_stock', 'on_order']:
+        products_list = products_list.filter(availability=avail)
+    
+    # Фильтрация по цвету через связанную модель ProductColor
+    if color:
+        products_list = products_list.filter(colors__color__icontains=color)
+    # Фильтрация по размеру через связанную модель ProductSize
+    if size:
+        products_list = products_list.filter(sizes__size__icontains=size)
+    if gender:
+        products_list = products_list.filter(gender__iexact=gender)
+
+    # Сортировка
     if sort_option == 'price_asc':
         products_list = products_list.order_by('price')
     elif sort_option == 'price_desc':
@@ -122,9 +156,17 @@ def category_detail(request, slug):
         'category': category,
         'products': products,
         'sort_option': sort_option,
+        # Передаём фильтры в контекст для сохранения выбранных значений в форме
+        'filters': {
+            'color': color or '',
+            'size': size or '',
+            'min_price': min_price or '',
+            'max_price': max_price or '',
+            'gender': gender or '',
+            'availability': avail or '',
+        },
     }
     return render(request, 'samal/category_detail.html', context)
-
 
 def product_search(request):
     query = request.GET.get('q', '').strip()

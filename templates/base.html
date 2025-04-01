@@ -23,12 +23,12 @@
   <!-- Header -->
   <header class="bg-white shadow-lg fixed w-full z-10">
   <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
-    <a href="{% url 'home' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
+    <a href="{% url 'category' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
       Samal Trade and Promotion
     </a>
     <!-- Desktop Navigation (показывается только на больших экранах) -->
     <div class="hidden lg:flex space-x-8">
-      <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a>
+      {% comment %} <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a> {% endcomment %}
       <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
       <a href="{% url 'cart_detail' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Корзина</a>
       <a href="{% url 'liked_products' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Избранное</a>
@@ -45,7 +45,7 @@
   <!-- Mobile Navigation Menu (для мобильных и планшетов) -->
   <div id="mobile-menu" class="lg:hidden hidden">
     <div class="container mx-auto px-6 py-4">
-      <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a>
+      {% comment %} <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a> {% endcomment %}
       <a href="{% url 'category' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Каталог</a>
       <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
       <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
