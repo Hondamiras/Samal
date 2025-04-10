@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Samal Trade and Promotion{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="icon" href="{% static 'images/logo.png' %}">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Внутри <head> -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -23,8 +25,9 @@
   <!-- Header -->
   <header class="bg-white shadow-lg fixed w-full z-10">
   <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
-    <a href="{% url 'category' %}" class="text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
-      Samal Trade and Promotion
+    <a href="{% url 'category' %}" class="flex items-center space-x-2 text-xl sm:text-2xl font-bold text-gray-800 hover:text-gray-600 hover-transition">
+      <img src="{% static 'images/logo.png' %}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10">
+      <span>Samal Trade and Promotion</span>
     </a>
     <!-- Desktop Navigation (показывается только на больших экранах) -->
     <div class="hidden lg:flex space-x-8">
