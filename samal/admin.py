@@ -1,5 +1,5 @@
 from django.contrib import admin
-from samal.models import Product, Category, ProductImage, WholesalePrice, ProductVariant, ProductSize, ProductColor
+from samal.models import Product, Category, ProductImage, Service, ServiceVariant, ServiceVariantImage, WholesalePrice, ProductVariant, ProductSize, ProductColor
 
 # Register your models here.
 @admin.register(Product)
@@ -35,3 +35,22 @@ class ProductSizeAdmin(admin.ModelAdmin):
 class ProductColorAdmin(admin.ModelAdmin):
     list_display = ('product', 'color')
 
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug')
+    prepopulated_fields = {'slug': ('title',)}
+
+
+from django.utils.html import format_html
+@admin.register(ServiceVariant)
+class ServiceVariantAdmin(admin.ModelAdmin):
+    list_display = ('title',)
+    prepopulated_fields = {'slug': ('title',)}
+
+
+@admin.register(ServiceVariantImage)
+class ServiceVariantImageAdmin(admin.ModelAdmin):
+    list_display = ('variant', 'image')
+
+    def image_tag(self, obj):
+        return format_html('<img src="{}" style="max-width: 100px; max-height: 100px;" />'.format(obj.image.url))

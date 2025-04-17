@@ -197,3 +197,50 @@ class CartItem(models.Model):
     @property
     def total_price(self):
         return self.price_to_use * self.quantity
+
+class Service(models.Model):
+    title = models.CharField(max_length=200, help_text="Название услуги")
+    slug = models.SlugField(
+        unique=True,
+        help_text="Уникальный идентификатор для URL, например: sewing, embroidery, printing"
+    )
+    description = models.TextField(help_text="Подробное описание услуги")
+    image = models.ImageField(
+        upload_to='services/',
+        blank=True,
+        null=True,
+        help_text="Изображение услуги"
+    )
+
+    class Meta:
+        verbose_name = "Услуга"
+        verbose_name_plural = "Услуги"
+
+    def __str__(self):
+        return self.title
+    
+    
+class ServiceVariant(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="variants")
+    slug = models.SlugField(help_text="Уникальный идентификатор для варианта, например: option1")
+    title = models.CharField(max_length=200, help_text="Название варианта услуги")
+    description = models.TextField(help_text="Подробное описание варианта")
+    image = models.ImageField(upload_to="services/variants/", blank=True, null=True, help_text="Изображение варианта")
+
+    class Meta:
+        verbose_name = "Вариант услуги"
+        verbose_name_plural = "Варианты услуг"
+
+    def __str__(self):
+        return f"{self.service.title} - {self.title}"
+
+class ServiceVariantImage(models.Model):
+    variant = models.ForeignKey(ServiceVariant, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="services/variants/images/", help_text="Изображение варианта услуги")
+
+    class Meta:
+        verbose_name = "Изображение варианта услуги"
+        verbose_name_plural = "Изображения вариантов услуг"
+
+    def __str__(self):
+        return f"Изображение для {self.variant.title}"

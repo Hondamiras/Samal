@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_list_or_404, redirect, render, get_object_or_404
 from samal.models import (
     Cart, CartItem, Like, Product, Category,
-    ProductColor, ProductImage, ProductSize, ProductVariant, WholesalePrice
+    ProductColor, ProductImage, ProductSize, ProductVariant, Service, ServiceVariant, WholesalePrice
 )
 from samal.forms import ContactForm
 from django.contrib import messages
@@ -636,3 +636,75 @@ def order_view(request):
 
 def order_success_view(request):
     return render(request, 'samal/order_success.html')
+
+
+
+
+
+def services(request):
+    services = Service.objects.all() 
+    return render(request, 'samal/services.html', {'services': services})
+
+def service_detail(request, slug):
+    service = get_object_or_404(Service, slug=slug)
+    # Будут доступны в шаблоне через service.variants.all()
+    return render(request, 'samal/service_detail.html', {'service': service})
+
+def service_variant_detail(request, service_slug, variant_slug):
+    service = get_object_or_404(Service, slug=service_slug)
+    variant = get_object_or_404(ServiceVariant, service=service, slug=variant_slug)
+    images = variant.images.all()
+    context = {
+        'service': service,
+        'variant': variant,
+        'images': images
+    }
+    return render(request, 'samal/service_variant_detail.html', context)
+
+
+def order_service_variant(request, service_slug, variant_slug):
+    service = get_object_or_404(Service, slug=service_slug)
+    variant = get_object_or_404(ServiceVariant, service=service, slug=variant_slug)
+    
+    if request.method == 'POST':
+        # Получение данных из формы заказа
+        name = request.POST.get('name')
+        user_email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        comment = request.POST.get('comment', '')
+        
+        # Формирование темы письма
+        subject = f"Новый заказ на услугу {service.title} - {variant.title} от {name}"
+        
+        # Сбор деталей заказа в сообщение
+        message_lines = [
+            "Детали заказа:",
+            f"Услуга: {service.title}",
+            f"Вариант услуги: {variant.title}",
+            "",
+            f"Имя: {name}",
+            f"Email: {user_email}",
+            f"Телефон: {phone}",
+            f"Комментарий: {comment}",
+        ]
+        full_message = "\n\n".join(message_lines)
+        
+        # Отправка письма
+        send_mail(
+            subject,
+            full_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.ORDER_EMAIL],
+            fail_silently=False,
+        )
+        
+        # Вывод сообщения об успехе и редирект на страницу успешного оформления заказа
+        messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
+        return redirect('order_success')
+    
+    # При GET-запросе просто отображаем форму заказа
+    context = {
+        'service': service,
+        'variant': variant,
+    }
+    return render(request, 'samal/order_service_variant.html', context)

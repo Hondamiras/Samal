@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+  <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-10 transition-all duration-300 hover:shadow-3xl">
+    
+    <!-- Заголовок -->
+    <div class="text-center mb-10">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Оформить заказ</h1>
+      <div class="flex flex-wrap items-center justify-center space-x-4">
+        <span class="text-xl text-gray-600">Вы выбрали:</span>
+        <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-lg font-semibold">
+          {{ variant.title }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Хлебные крошки -->
+    <div class="mb-8">
+      <nav aria-label="Навигация">
+        <ol class="flex flex-wrap space-x-2 text-sm text-gray-500">
+          <li>
+            <a href="{% url 'service_detail' service.slug %}" class="hover:text-blue-600">{{ service.title }}</a>
+          </li>
+          <li>/</li>
+          <li>
+            <a href="{% url 'service_variant_detail' service.slug variant.slug %}" class="hover:text-blue-600">
+              {{ variant.title }}
+            </a>
+          </li>
+          <li>/</li>
+          <li class="text-gray-800 font-medium">Оформление</li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Форма заказа -->
+    <form method="post" action="" class="space-y-8">
+      {% csrf_token %}
+      
+      <!-- Группа полей ввода -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Поле Имя -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+            Ваше имя<span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="name" name="name" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                   placeholder="Иван Иванов">
+            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Поле Телефон -->
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+            Контактный телефон<span class="text-red-500">*</span>
+          </label>
+          <input type="tel" id="phone" name="phone" required
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                 placeholder="+7 (777) 123-45-67"
+                 pattern="\+7\s?[\(]{0,1}\d{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{2}[-]{0,1}\d{2}">
+        </div>
+
+        <!-- Поле Email -->
+        <div class="md:col-span-2">
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            Электронная почта<span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="email" id="email" name="email" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                   placeholder="example@mail.com">
+            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Поле Комментарий -->
+        <div class="md:col-span-2">
+          <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+            Дополнительные пожелания<span class="text-sm text-gray-500">(необязательно)</span>
+          </label>
+          <textarea id="message" name="message" rows="4"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="Опишите ваши требования..."
+                    maxlength="500"></textarea>
+          <div class="mt-1 text-right text-sm text-gray-500">
+            <span id="char-count">0</span>/500 символов
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопка отправки -->
+      <button type="submit" 
+              class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg">
+        Подтвердить заказ
+        <svg class="w-5 h-5 inline-block ml-2 -mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Счетчик символов для комментария
+  const textarea = document.getElementById('message');
+  const charCount = document.getElementById('char-count');
+  
+  textarea.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+  });
+</script>
+
+<style>
+  /* Дополнительные стили для плавного фокуса */
+  input:focus, textarea:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  }
+</style>
+{% endblock %}

@@ -11,7 +11,8 @@
   <!-- Внутри <head> -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
+  {% block extra_head %}
+  {% endblock %}
   <style>
     body {
       @apply bg-gray-100;
@@ -32,6 +33,7 @@
     <!-- Desktop Navigation (показывается только на больших экранах) -->
     <div class="hidden lg:flex space-x-8">
       {% comment %} <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Главная</a> {% endcomment %}
+      <a href="{% url 'services' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Услуги</a>
       <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
       <a href="{% url 'cart_detail' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Корзина</a>
       <a href="{% url 'liked_products' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Избранное</a>
@@ -49,6 +51,7 @@
   <div id="mobile-menu" class="lg:hidden hidden">
     <div class="container mx-auto px-6 py-4">
       {% comment %} <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a> {% endcomment %}
+      <a href="{% url 'services' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Услуги</a>
       <a href="{% url 'category' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Каталог</a>
       <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
       <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
@@ -190,5 +193,7 @@
     mobileMenu.classList.toggle('hidden');
   });
 </script>
+{% block extra_js %}
+{% endblock %}
 </body>
 </html>
