@@ -541,6 +541,8 @@ def clear_cart(request):
 # =====================================================
 # Функции для оформления заказа
 # =====================================================
+from django.db import transaction
+from django.db.models import F
 
 def order_view(request):
     session_key = get_session_key(request)
@@ -554,12 +556,12 @@ def order_view(request):
     if request.method == 'POST':
         if total_price < 5000:
             messages.error(request, "Минимальная сумма заказа должна быть не менее 5000 ₸")
-            context = {
+            return render(request, 'samal/order.html', {
                 'cart_items': cart_items,
                 'total_price': total_price,
-            }
-            return render(request, 'samal/order.html', context)
+            })
 
+        # Собираем данные формы
         name = request.POST.get('name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
@@ -569,40 +571,36 @@ def order_view(request):
         subject = f"Новый заказ от {name}"
         message_lines = [
             "Детали заказа:",
-            "---------------------"
+            "---------------------",
         ]
 
         for item in cart_items:
-            # Если товар добавлен через вариант, получаем данные из product_variant
             if item.product_variant:
                 product = item.product_variant.product
                 color = item.product_variant.color.color if item.product_variant.color else "не указан"
                 size = item.product_variant.size.size if item.product_variant.size else "не указан"
             else:
-                product = None
+                product = item.product
                 color = "не указан"
                 size = "не указан"
 
             unit_price = get_unit_price(item)
             total = item_total(item)
-            # Форматирование информации по товару с разделением строк для лучшей читаемости
-            line = (
-                f"ID: {product.id if product else 'не указан'}\n"
-                f"Название: {product.name if product else 'Не указан'}\n"
+
+            message_lines.append(
+                f"ID: {product.id if product else '—'}\n"
+                f"Название: {product.name if product else '—'}\n"
                 f"Количество: {item.quantity} {product.get_unit_display() if product else ''}\n"
                 f"Цвет: {color}\n"
                 f"Размер: {size}\n"
-                f"Цена за единицу: {unit_price}₸\n"
-                f"Итого: {total}₸\n"
+                f"Цена за единицу: {unit_price} ₸\n"
+                f"Итого: {total} ₸\n"
                 "---------------------"
             )
-            message_lines.append(line)
 
-        # Добавляем общую сумму заказа
-        message_lines.append(f"Общая сумма заказа: {total_price}₸")
-
-        # Контактная информация
+        message_lines.append(f"Общая сумма заказа: {total_price} ₸")
         message_lines.extend([
+            "",
             "Контактная информация:",
             f"Имя: {name}",
             f"Email: {email}",
@@ -611,35 +609,42 @@ def order_view(request):
             f"Комментарий: {comment}",
         ])
 
-        # Собираем письмо с двойным переводом строки между блоками
         full_message = "\n\n".join(message_lines)
 
-        send_mail(
-            subject,
-            full_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [settings.ORDER_EMAIL]
-        )
+        # Обрабатываем всё в атомарной транзакции
+        with transaction.atomic():
+            # Уменьшаем остатки по каждому товару/варианту
+            for item in cart_items:
+                if item.product_variant:
+                    variant = item.product_variant
+                    variant.quantity = F('quantity') - item.quantity
+                    variant.save(update_fields=['quantity'])
+                else:
+                    product = item.product
+                    product.quantity = F('quantity') - item.quantity
+                    product.save(update_fields=['quantity'])
 
-        if cart:
-            cart.delete()
+            # Отправляем уведомление на почту
+            send_mail(
+                subject,
+                full_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ORDER_EMAIL],
+            )
+
+            # Очищаем корзину
+            if cart:
+                cart.delete()
 
         messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
         return redirect('order_success')
 
-    context = {
+    return render(request, 'samal/order.html', {
         'cart_items': cart_items,
         'total_price': total_price,
-    }
-    return render(request, 'samal/order.html', context)
-
-
+    })
 def order_success_view(request):
     return render(request, 'samal/order_success.html')
-
-
-
-
 
 def services(request):
     services = Service.objects.all() 

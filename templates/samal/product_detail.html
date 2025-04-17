@@ -193,21 +193,6 @@
                     ✕
                   </button>
 
-                  <!-- Количество -->
-                  <div class="mb-4">
-                    <label for="variant-0-quantity" class="block font-medium text-gray-700 mb-1">
-                      Количество:
-                    </label>
-                    <input type="number"
-                           id="variant-0-quantity"
-                           name="variants-0-quantity"
-                           value="1"
-                           min="1"
-                           class="quantity-input w-32 border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           required
-                           aria-label="Количество товара">
-                  </div>
-
                   <!-- Цвет (static from server) -->
                   {% if product_colors %}
                   <div class="mb-4">
@@ -243,6 +228,21 @@
                     <div class="variant-0-size_id-error text-red-500 text-sm mt-1"></div>
                   </div>
                   {% endif %}
+
+                  <!-- Количество -->
+                  <div class="mb-4">
+                    <label for="variant-0-quantity" class="block font-medium text-gray-700 mb-1">
+                      Количество:
+                    </label>
+                    <input type="number"
+                           id="variant-0-quantity"
+                           name="variants-0-quantity"
+                           value="1"
+                           min="1"
+                           class="quantity-input w-32 border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           required
+                           aria-label="Количество товара">
+                  </div>
                 </div>
               </div>
 
@@ -253,6 +253,9 @@
                         class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                   + Добавить ещё вариант
                 </button>
+                <div id="total-items-wrapper" class="mb-2 text-lg font-medium text-gray-800">
+                  Выбрано товаров: <span id="total-items-count">0</span>
+                </div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         aria-label="Добавить выбранные варианты в корзину">
@@ -555,276 +558,295 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Toggle Like
-  const toggleLikeBtn = document.getElementById("toggle-like-ajax");
-  if (toggleLikeBtn) {
-    toggleLikeBtn.addEventListener("click", function(e) {
-      e.preventDefault();
-      const url = "{% url 'toggle_like' product.slug %}";
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-          csrfmiddlewaretoken: csrfToken
+
+  // Функция для пересчёта общего количества
+  function updateTotalItemsCount() {
+    const qtyInputs = document.querySelectorAll('#variants-container .quantity-input');
+    let total = 0;
+    qtyInputs.forEach(input => {
+      const val = parseInt(input.value, 10);
+      if (!isNaN(val)) total += val;
+    });
+    document.getElementById('total-items-count').textContent = total;
+  }
+
+  // После загрузки страницы сразу пересчитаем
+  document.addEventListener('DOMContentLoaded', () => {
+    updateTotalItemsCount();
+  });
+
+  // Пересчёт при изменении любого поля количества
+  document.getElementById('variants-container').addEventListener('input', e => {
+    if (e.target.classList.contains('quantity-input')) {
+      updateTotalItemsCount();
+    }
+  });
+
+  // После добавления или удаления блока вариантов — тоже пересчитываем
+  // В вашем код, где вы создаёте новый блок (addVariantBtn click) и где удаляете:
+  // просто вставьте после этих операций:
+  updateTotalItemsCount();
+
+
+    // Toggle Like
+    const toggleLikeBtn = document.getElementById("toggle-like-ajax");
+    if (toggleLikeBtn) {
+      toggleLikeBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        const url = "{% url 'toggle_like' product.slug %}";
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({
+            csrfmiddlewaretoken: csrfToken
+          })
         })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          const likeText = document.getElementById("like-text");
-          const likeIcon = document.getElementById("like-icon");
-          if (data.liked) {
-            likeText.textContent = "В избранном";
-            likeIcon.setAttribute("fill", "currentColor");
-          } else {
-            likeText.textContent = "В избранное";
-            likeIcon.setAttribute("fill", "none");
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const likeText = document.getElementById("like-text");
+            const likeIcon = document.getElementById("like-icon");
+            if (data.liked) {
+              likeText.textContent = "В избранном";
+              likeIcon.setAttribute("fill", "currentColor");
+            } else {
+              likeText.textContent = "В избранное";
+              likeIcon.setAttribute("fill", "none");
+            }
+            Toastify({
+              text: data.liked ? "Товар добавлен в избранное" : "Товар удалён из избранного",
+              duration: 3000,
+              close: true,
+              gravity: "top",
+              position: "center",
+              backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+            }).showToast();
           }
+        })
+        .catch(error => {
           Toastify({
-            text: data.liked ? "Товар добавлен в избранное" : "Товар удалён из избранного",
+            text: "Ошибка: " + error,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+          }).showToast();
+        });
+      });
+    }
+
+    /**
+    * attachColorChangeHandler(variantBlock):
+    *   1) При выборе цвета заполняет список размеров
+    *   2) При выборе размера устанавливает атрибут max для количества, если stock > 0
+    */
+    function attachColorChangeHandler(variantBlock) {
+      const colorSelect = variantBlock.querySelector('.color-select');
+      const sizeSelect = variantBlock.querySelector('.size-select');
+      const quantityInput = variantBlock.querySelector('.quantity-input');
+
+      if (!colorSelect || !sizeSelect || !quantityInput) return;
+
+      // Изначально показываем сообщение для выбора цвета
+      sizeSelect.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
+
+      // При смене цвета заполняем размеры
+colorSelect.addEventListener('change', function() {
+  sizeSelect.innerHTML = '<option value="" disabled selected>-- Выберите размер --</option>';
+  quantityInput.removeAttribute('max');
+
+  const sizesForColor = productVariants[colorSelect.value] || [];
+  sizesForColor.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.size_id;
+    opt.dataset.qty = item.quantity;
+
+    if (item.quantity > 0) {
+      opt.textContent = `${item.size_name} (Осталось: ${item.quantity})`;
+    } else {
+      // товар закончился
+      opt.textContent = `${item.size_name} — не осталось`;
+      opt.disabled = true;
+    }
+
+    sizeSelect.appendChild(opt);
+  });
+});
+
+
+      // При выборе размера обновляем атрибут max для поля количества
+      sizeSelect.addEventListener('change', function() {
+        const selectedOpt = sizeSelect.options[sizeSelect.selectedIndex];
+        if (!selectedOpt) return;
+        const qty = parseInt(selectedOpt.dataset.qty, 10);
+        if (!isNaN(qty) && qty > 0) {
+          quantityInput.setAttribute('max', qty);
+        } else {
+          quantityInput.removeAttribute('max');
+        }
+      });
+    }
+
+    // MULTI-FORM logic
+    const multiForm = document.getElementById("multi-add-to-cart-form");
+    const variantsContainer = document.getElementById('variants-container');
+    const addVariantBtn = document.getElementById('add-variant');
+    const maxVariants = 10;
+
+    // Для первого блока при загрузке страницы
+    if (variantsContainer) {
+      const initialBlock = variantsContainer.querySelector('.variant-group');
+      if (initialBlock) attachColorChangeHandler(initialBlock);
+    }
+
+    // Функция переиндексации блоков после удаления
+    function reindexVariantBlocks() {
+      const variantBlocks = document.querySelectorAll('#variants-container .variant-group');
+      variantBlocks.forEach((block, index) => {
+        block.querySelectorAll('[id]').forEach(elem => {
+          // Заменяем цифры в id на новый индекс
+          elem.id = elem.id.replace(/\d+/, index);
+        });
+        block.querySelectorAll('[name]').forEach(elem => {
+          elem.name = elem.name.replace(/\d+/, index);
+        });
+      });
+    }
+
+    // Отправка формы много-вариантного добавления в корзину
+    if (multiForm) {
+      multiForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const url = multiForm.getAttribute("action");
+        const formData = new FormData(multiForm);
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: formDataToUrlEncoded(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          Toastify({
+            text: data.message,
             duration: 3000,
             close: true,
             gravity: "top",
             position: "center",
             backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
           }).showToast();
-        }
-      })
-      .catch(error => {
-        Toastify({
-          text: "Ошибка: " + error,
-          duration: 3000,
-          close: true,
-          gravity: "top",
-          position: "center",
-          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
-        }).showToast();
-      });
-    });
-  }
-
-  /**
-   * attachColorChangeHandler(variantBlock):
-   *   1) При выборе цвета заполняет список размеров
-   *   2) При выборе размера устанавливает атрибут max для количества, если stock > 0
-   */
-  function attachColorChangeHandler(variantBlock) {
-    const colorSelect = variantBlock.querySelector('.color-select');
-    const sizeSelect = variantBlock.querySelector('.size-select');
-    const quantityInput = variantBlock.querySelector('.quantity-input');
-
-    if (!colorSelect || !sizeSelect || !quantityInput) return;
-
-    // Изначально показываем сообщение для выбора цвета
-    sizeSelect.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
-
-    // При смене цвета заполняем размеры
-    colorSelect.addEventListener('change', function() {
-      sizeSelect.innerHTML = '<option value="" disabled selected>-- Выберите размер --</option>';
-      // Удаляем предыдущий атрибут max
-      quantityInput.removeAttribute('max');
-
-      const selectedColorID = this.value;
-      if (!selectedColorID) return;
-
-      const sizesForColor = productVariants[selectedColorID];
-      if (!sizesForColor || !Array.isArray(sizesForColor)) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.disabled = true;
-        opt.textContent = 'Нет доступных размеров для этого цвета';
-        sizeSelect.appendChild(opt);
-        return;
-      }
-
-      // Заполняем выпадающий список размеров, сохраняя количество в dataset
-      sizesForColor.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.size_id;
-        opt.dataset.qty = item.quantity;
-        if (item.quantity > 0) {
-          opt.textContent = `${item.size_name} (Осталось: ${item.quantity})`;
-        } else if (item.quantity === 0) {
-          opt.textContent = `${item.size_name}`;
-        } else {
-          opt.textContent = `${item.size_name}`;
-        }
-        sizeSelect.appendChild(opt);
-      });
-    });
-
-    // При выборе размера обновляем атрибут max для поля количества
-    sizeSelect.addEventListener('change', function() {
-      const selectedOpt = sizeSelect.options[sizeSelect.selectedIndex];
-      if (!selectedOpt) return;
-      const qty = parseInt(selectedOpt.dataset.qty, 10);
-      if (!isNaN(qty) && qty > 0) {
-        quantityInput.setAttribute('max', qty);
-      } else {
-        quantityInput.removeAttribute('max');
-      }
-    });
-  }
-
-  // MULTI-FORM logic
-  const multiForm = document.getElementById("multi-add-to-cart-form");
-  const variantsContainer = document.getElementById('variants-container');
-  const addVariantBtn = document.getElementById('add-variant');
-  const maxVariants = 10;
-
-  // Для первого блока при загрузке страницы
-  if (variantsContainer) {
-    const initialBlock = variantsContainer.querySelector('.variant-group');
-    if (initialBlock) attachColorChangeHandler(initialBlock);
-  }
-
-  // Функция переиндексации блоков после удаления
-  function reindexVariantBlocks() {
-    const variantBlocks = document.querySelectorAll('#variants-container .variant-group');
-    variantBlocks.forEach((block, index) => {
-      block.querySelectorAll('[id]').forEach(elem => {
-        // Заменяем цифры в id на новый индекс
-        elem.id = elem.id.replace(/\d+/, index);
-      });
-      block.querySelectorAll('[name]').forEach(elem => {
-        elem.name = elem.name.replace(/\d+/, index);
-      });
-    });
-  }
-
-  // Отправка формы много-вариантного добавления в корзину
-  if (multiForm) {
-    multiForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      const url = multiForm.getAttribute("action");
-      const formData = new FormData(multiForm);
-
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formDataToUrlEncoded(formData)
-      })
-      .then(response => response.json())
-      .then(data => {
-        Toastify({
-          text: data.message,
-          duration: 3000,
-          close: true,
-          gravity: "top",
-          position: "center",
-          backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
-        }).showToast();
-        if (typeof updateCartCount === "function") {
-          updateCartCount();
-        }
-      })
-      .catch(error => {
-        Toastify({
-          text: "Ошибка: " + error,
-          duration: 3000,
-          close: true,
-          gravity: "top",
-          position: "center",
-          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
-        }).showToast();
-      });
-    });
-  }
-
-  // Добавление нового блока варианта
-  if (addVariantBtn && variantsContainer) {
-    addVariantBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      const variantGroups = variantsContainer.querySelectorAll('.variant-group');
-      const newIndex = variantGroups.length;
-
-      if (newIndex >= maxVariants) {
-        Toastify({
-          text: `Максимум ${maxVariants} вариантов!`,
-          duration: 3000,
-          close: true,
-          gravity: "top",
-          position: "center",
-          backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
-        }).showToast();
-        addVariantBtn.disabled = true;
-        return;
-      }
-
-      // Клонируем первый блок варианта
-      const templateBlock = variantGroups[0];
-      const newBlock = templateBlock.cloneNode(true);
-
-      // Обновляем атрибуты id и name для нового блока
-      newBlock.querySelectorAll('[id]').forEach(elem => {
-        elem.id = elem.id.replace(/\d+/, newIndex);
-      });
-      newBlock.querySelectorAll('[name]').forEach(elem => {
-        elem.name = elem.name.replace(/\d+/, newIndex);
-      });
-
-      // Очищаем значения полей нового блока
-      newBlock.querySelectorAll('input, select').forEach(elem => {
-        if (elem.tagName.toLowerCase() === 'input') {
-          if (elem.type === 'number') {
-            elem.value = 1;
-            elem.removeAttribute('max');
-          } else {
-            elem.value = '';
+          if (typeof updateCartCount === "function") {
+            updateCartCount();
           }
-        } else if (elem.tagName.toLowerCase() === 'select') {
-          if (elem.classList.contains('size-select')) {
-            elem.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
-          } else {
-            elem.selectedIndex = 0;
-          }
-        }
+        })
+        .catch(error => {
+          Toastify({
+            text: "Ошибка: " + error,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+          }).showToast();
+        });
       });
+    }
 
-      // Привязываем обработчик кнопки удаления для нового блока
-      const removeBtn = newBlock.querySelector('.remove-variant');
-      if (removeBtn) {
-        removeBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          newBlock.remove();
-          reindexVariantBlocks(); // Переиндексируем оставшиеся блоки
-          if (variantsContainer.querySelectorAll('.variant-group').length < maxVariants) {
-            addVariantBtn.disabled = false;
+    // Добавление нового блока варианта
+    if (addVariantBtn && variantsContainer) {
+      addVariantBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const variantGroups = variantsContainer.querySelectorAll('.variant-group');
+        const newIndex = variantGroups.length;
+
+        if (newIndex >= maxVariants) {
+          Toastify({
+            text: `Максимум ${maxVariants} вариантов!`,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+          }).showToast();
+          addVariantBtn.disabled = true;
+          return;
+        }
+
+        // Клонируем первый блок варианта
+        const templateBlock = variantGroups[0];
+        const newBlock = templateBlock.cloneNode(true);
+
+        // Обновляем атрибуты id и name для нового блока
+        newBlock.querySelectorAll('[id]').forEach(elem => {
+          elem.id = elem.id.replace(/\d+/, newIndex);
+        });
+        newBlock.querySelectorAll('[name]').forEach(elem => {
+          elem.name = elem.name.replace(/\d+/, newIndex);
+        });
+
+        // Очищаем значения полей нового блока
+        newBlock.querySelectorAll('input, select').forEach(elem => {
+          if (elem.tagName.toLowerCase() === 'input') {
+            if (elem.type === 'number') {
+              elem.value = 1;
+              elem.removeAttribute('max');
+            } else {
+              elem.value = '';
+            }
+          } else if (elem.tagName.toLowerCase() === 'select') {
+            if (elem.classList.contains('size-select')) {
+              elem.innerHTML = '<option value="" disabled selected>-- Сначала выберите цвет --</option>';
+            } else {
+              elem.selectedIndex = 0;
+            }
           }
         });
-      }
 
-      // Добавляем новый блок и привязываем обработчик смены цвета и размера
-      variantsContainer.appendChild(newBlock);
-      attachColorChangeHandler(newBlock);
-
-      if (variantsContainer.querySelectorAll('.variant-group').length >= maxVariants) {
-        addVariantBtn.disabled = true;
-      }
-    });
-  }
-
-  // Обработчик удаления блока через делегирование (на случай, если кнопка не привязалась)
-  if (variantsContainer) {
-    variantsContainer.addEventListener('click', function(e) {
-      if (e.target.classList.contains('remove-variant')) {
-        e.preventDefault();
-        const block = e.target.closest('.variant-group');
-        if (block) {
-          block.remove();
-          reindexVariantBlocks();
+        // Привязываем обработчик кнопки удаления для нового блока
+        const removeBtn = newBlock.querySelector('.remove-variant');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newBlock.remove();
+            reindexVariantBlocks(); // Переиндексируем оставшиеся блоки
+            if (variantsContainer.querySelectorAll('.variant-group').length < maxVariants) {
+              addVariantBtn.disabled = false;
+            }
+          });
         }
-        const countNow = variantsContainer.querySelectorAll('.variant-group').length;
-        if (countNow < maxVariants && addVariantBtn) {
-          addVariantBtn.disabled = false;
+
+        // Добавляем новый блок и привязываем обработчик смены цвета и размера
+        variantsContainer.appendChild(newBlock);
+        attachColorChangeHandler(newBlock);
+
+        if (variantsContainer.querySelectorAll('.variant-group').length >= maxVariants) {
+          addVariantBtn.disabled = true;
         }
-      }
-    });
-  }
-});
+      });
+    }
+
+    // Обработчик удаления блока через делегирование (на случай, если кнопка не привязалась)
+    if (variantsContainer) {
+      variantsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-variant')) {
+          e.preventDefault();
+          const block = e.target.closest('.variant-group');
+          if (block) {
+            block.remove();
+            reindexVariantBlocks();
+          }
+          const countNow = variantsContainer.querySelectorAll('.variant-group').length;
+          if (countNow < maxVariants && addVariantBtn) {
+            addVariantBtn.disabled = false;
+          }
+        }
+      });
+    }
+  });
 </script>
 {% endblock %}
