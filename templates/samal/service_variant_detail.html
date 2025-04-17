@@ -7,49 +7,106 @@
 <style>
   .swiper {
     width: 100%;
-    height: 500px;
-    border-radius: 0.5rem;
+    height: 80vh;
+    max-height: 600px;
+    border-radius: 1rem;
     overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .swiper-slide {
+    position: relative;
+    transition: transform 0.3s ease;
   }
 
   .swiper-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    aspect-ratio: 16/9;
   }
 
   .swiper-button-next,
   .swiper-button-prev {
     color: white;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.25rem;
     border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
-    backdrop-filter: blur(4px);
+    width: 2.5rem;
+    height: 2.5rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    opacity: 0.8;
+  }
+
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    transform: scale(1.05);
   }
 
   .swiper-button-next::after,
   .swiper-button-prev::after {
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 1.25rem;
+  }
+
+  .swiper-pagination-bullet {
+    background: white !important;
+    opacity: 0.5 !important;
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  .swiper-pagination-bullet-active {
+    opacity: 1 !important;
+    background: #3b82f6 !important;
+    width: 30px !important;
+    border-radius: 4px !important;
+  }
+
+  @media (max-width: 1024px) {
+    .swiper {
+      height: 50vh;
+      border-radius: 0.75rem;
+    }
   }
 
   @media (max-width: 768px) {
     .swiper {
-      height: 300px;
+      height: 40vh;
+      border-radius: 0.5rem;
+    }
+    
+    .swiper-button-next,
+    .swiper-button-prev {
+      display: none;
+    }
+
+    .swiper-pagination {
+      bottom: 10px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .swiper {
+      height: 35vh;
+    }
+    
+    .swiper-slide img {
+      aspect-ratio: 4/3;
     }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
   <!-- Back Navigation -->
-  <div class="mb-8">
+  <div class="mb-6 md:mb-8">
     <a href="{% url 'service_detail' service.slug %}" 
-       class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors group">
+      <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
       </svg>
       Вернуться
@@ -57,26 +114,29 @@
   </div>
 
   <!-- Main Content -->
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-    <div class="p-8 sm:p-12">
+  <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+    <div class="p-6 sm:p-8 lg:p-12">
       <!-- Heading -->
-      <h1 class="text-4xl font-extrabold text-gray-900 mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
         {{ variant.title }}
       </h1>
 
       <!-- Image Carousel -->
       {% if variant.images.all %}
-      <div class="swiper mb-8">
+      <div class="swiper mb-6 md:mb-8">
         <div class="swiper-wrapper">
           {% for img in variant.images.all %}
           <div class="swiper-slide">
             <img src="{{ img.image.url }}" 
-                 alt="Изображение {{ forloop.counter }} для {{ variant.title }}">
+                 alt="Изображение {{ forloop.counter }} для {{ variant.title }}"
+                 class="hover:scale-105 transition-transform duration-300"
+                 loading="lazy">
           </div>
           {% endfor %}
         </div>
         
         {% if variant.images.all|length > 1 %}
+        <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
         <div class="swiper-button-prev"></div>
         {% endif %}
@@ -84,17 +144,17 @@
       {% endif %}
 
       <!-- Content -->
-      <div class="prose prose-lg max-w-none mb-8">
-        <div class="space-y-6">
+      <div class="prose prose-base sm:prose-lg max-w-none mb-6 md:mb-8">
+        <div class="space-y-4 sm:space-y-6">
           {{ variant.description|safe }}
         </div>
       </div>
 
       <!-- Call to Action -->
-      <div class="mt-12 text-center">
+      <div class="mt-8 sm:mt-12 text-center">
         <a href="{% url 'order_service_variant' service.slug variant.slug %}" 
-           class="inline-flex items-center px-8 py-3 border border-transparent text-lg font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
-          <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 border border-transparent text-base sm:text-lg font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
           </svg>
@@ -123,10 +183,34 @@
         nextEl: '.swiper-button-next',
         prevEl: '.swiper-button-prev',
       },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
       effect: 'slide',
-      speed: 500,
+      speed: 600,
+      grabCursor: true,
       autoplay: {
         delay: 5000,
+        disableOnInteraction: false,
+      },
+      breakpoints: {
+        320: {
+          slidesPerView: 1,
+          spaceBetween: 10,
+        },
+        768: {
+          slidesPerView: 1,
+          spaceBetween: 20,
+        },
+        1024: {
+          slidesPerView: 1,
+          spaceBetween: 30,
+        },
+      },
+      keyboard: {
+        enabled: true,
+        onlyInViewport: true,
       },
     });
   });
