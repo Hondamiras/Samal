@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block content %}
-<h1 class="text-3xl font-bold text-gray-800 mb-6">Наши услуги</h1>
+<h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Наши услуги</h1>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
   {% for service in services %}
     <a href="{% url 'service_detail' service.slug %}" class="block bg-white shadow-md rounded-lg overflow-hidden transform transition hover:scale-105">
