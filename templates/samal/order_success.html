@@ -1,50 +1,69 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load math_filters %}
+
 {% block title %}Заказ успешно оформлен{% endblock %}
 
 {% block content %}
-<div class=" flex items-center justify-center px-4 sm:px-6 lg:px-8">
-    <div class="max-w-lg w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-300 ">
-        <div class="flex flex-col items-center">
-            <!-- Animated checkmark icon -->
-            <div class="mb-6 animate-bounce text-blue-600">
-                <svg class="h-16 w-16 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
+<div class="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+  <div class="max-w-lg w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-300">
+    <div class="flex flex-col items-center">
+      <!-- Animated checkmark icon -->
+      <div class="mb-6 animate-bounce text-blue-600">
+        <svg class="h-16 w-16 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
 
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-4">
-                Заказ успешно оформлен!
-                <span class="block w-12 h-1 bg-emerald-400 mt-4 mx-auto rounded-full"></span>
-            </h1>
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-4">
+        Заказ успешно оформлен!
+        <span class="block w-12 h-1 bg-emerald-400 mt-4 mx-auto rounded-full"></span>
+      </h1>
 
-            <p class="text-lg text-gray-600 leading-relaxed mb-8 max-w-md">
-                Благодарим за доверие! Наш менеджер свяжется с вами для подтверждения заказа и уточнения деталей доставки.
-            </p>
+      <p class="text-lg text-gray-600 leading-relaxed mb-8 max-w-md">
+        Благодарим за доверие, {{ name }}! Ниже представлена информация о вашем заказе.
+      </p>
 
-            <!-- Decorative elements -->
-            <div class="flex space-x-4">
-                <div class="w-8 h-8 rounded-full bg-emerald-100 animate-pulse"></div>
-                <div class="w-8 h-8 rounded-full bg-emerald-100 animate-pulse delay-75"></div>
-                <div class="w-8 h-8 rounded-full bg-emerald-100 animate-pulse delay-150"></div>
-            </div>
+      <!-- Детали заказа -->
+      <div class="w-full mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Товары:</h2>
+        <ul class="list-disc pl-5 space-y-3">
+          {% for item in cart_items %}
+            <li>
+              {% if item.product_variant %}
+                {% with prod=item.product_variant.product %}
+                  <span class="font-medium">{{ prod.name }}</span> — {{ item.quantity }} {{ prod.get_unit_display }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸ = {{ item.total_price }}₸<br>
+                  Цвет: {{ item.product_variant.color.color|default:"—" }}, Размер: {{ item.product_variant.size.size|default:"—" }}
+                {% endwith %}
+              {% else %}
+                <span class="font-medium">{{ item.product.name }}</span> — {{ item.quantity }} {{ item.product.get_unit_display }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸ = {{ item.total_price }}₸
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="mt-4 text-lg font-bold">Общая сумма: {{ total_price }} ₸</p>
+      </div>
 
-            <!-- Enhanced "Вернуться назад" button with icon reversed -->
-            <a href="javascript:history.back()"
-            class="bg-blue-600 group inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                <svg class="mr-2 w-5 h-5 transform" style="transform: scaleX(-1);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                </svg>
-                <span>Вернуться назад</span>
-            </a>
+      <!-- Контактная информация -->
+      <div class="w-full mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Контактные данные:</h2>
+        <p>Имя: <span class="font-medium">{{ name }}</span></p>
+        <p>Email: <span class="font-medium">{{ email }}</span></p>
+        <p>Телефон: <span class="font-medium">{{ phone }}</span></p>
+        <p>Адрес доставки: <span class="font-medium">{{ address }}</span></p>
+        {% if comment %}
+          <p>Комментарий: <span class="italic">{{ comment }}</span></p>
+        {% endif %}
+      </div>
 
-
-            {% comment %} <!-- Additional info -->
-            <p class="mt-8 text-sm text-gray-500">
-                По вопросам заказа звоните:<br>
-                <a href="tel:+79991234567" class="font-semibold text-emerald-600 hover:text-emerald-700">+7 (999) 123-45-67</a>
-            </p> {% endcomment %}
-        </div>
+      <!-- Кнопка возврата -->
+      <a href="/" class="bg-blue-600 group inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+        <svg class="mr-2 w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+        </svg>
+        <span>На главную</span>
+      </a>
     </div>
+  </div>
 </div>
 {% endblock %}

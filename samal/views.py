@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.http import JsonResponse
 from django.shortcuts import get_list_or_404, redirect, render, get_object_or_404
 from samal.models import (
@@ -550,6 +551,9 @@ def order_view(request):
     cart_items = cart.items.all() if cart else []
     total_price = sum(item.total_price for item in cart_items)
 
+    # Предустанавливаем переменные для GET-запроса
+    name = email = phone = address = comment = ""
+
     if not cart_items:
         messages.error(request, "Корзина пуста")
 
@@ -559,6 +563,11 @@ def order_view(request):
             return render(request, 'samal/order.html', {
                 'cart_items': cart_items,
                 'total_price': total_price,
+                'name': name,
+                'email': email,
+                'phone': phone,
+                'address': address,
+                'comment': comment,
             })
 
         # Собираем данные формы
@@ -568,12 +577,14 @@ def order_view(request):
         address = request.POST.get('address')
         comment = request.POST.get('comment', '')
 
+        # Готовим сообщение
         subject = f"Новый заказ от {name}"
         message_lines = [
             "Детали заказа:",
             "---------------------",
         ]
 
+        order_cart_items = []
         for item in cart_items:
             if item.product_variant:
                 product = item.product_variant.product
@@ -598,6 +609,13 @@ def order_view(request):
                 "---------------------"
             )
 
+            order_cart_items.append({
+                'product': product.id if product else None,
+                'product_variant': item.product_variant.id if item.product_variant else None,
+                'quantity': item.quantity,
+                'total_price': str(item.total_price),
+            })
+
         message_lines.append(f"Общая сумма заказа: {total_price} ₸")
         message_lines.extend([
             "",
@@ -611,9 +629,8 @@ def order_view(request):
 
         full_message = "\n\n".join(message_lines)
 
-        # Обрабатываем всё в атомарной транзакции
         with transaction.atomic():
-            # Уменьшаем остатки по каждому товару/варианту
+            # Уменьшаем остатки
             for item in cart_items:
                 if item.product_variant:
                     variant = item.product_variant
@@ -624,28 +641,78 @@ def order_view(request):
                     product.quantity = F('quantity') - item.quantity
                     product.save(update_fields=['quantity'])
 
-            # Отправляем уведомление на почту
+            # Отправляем письмо
             send_mail(
                 subject,
                 full_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [settings.ORDER_EMAIL],
+                [settings.ORDER_EMAIL, email],
             )
 
-            # Очищаем корзину
+            # Сохраняем данные заказа в сессии
+            request.session['order_data'] = {
+                'cart_items': order_cart_items,
+                'name': name,
+                'email': email,
+                'phone': phone,
+                'address': address,
+                'comment': comment,
+                'total_price': str(total_price),
+            }
+
+            # Удаляем корзину
             if cart:
                 cart.delete()
 
         messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
         return redirect('order_success')
 
+    # GET запрос — просто показываем форму
     return render(request, 'samal/order.html', {
         'cart_items': cart_items,
         'total_price': total_price,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'comment': comment,
     })
-def order_success_view(request):
-    return render(request, 'samal/order_success.html')
 
+def order_success_view(request):
+    order_data = request.session.get('order_data', {})
+
+    cart_items = []
+    for item_data in order_data.get('cart_items', []):
+        product = Product.objects.get(id=item_data['product']) if item_data['product'] else None
+        product_variant = ProductVariant.objects.get(id=item_data['product_variant']) if item_data['product_variant'] else None
+
+        total_price = Decimal(item_data['total_price'])
+        quantity = item_data['quantity']
+        unit_price = total_price / quantity if quantity else 0
+
+        cart_items.append({
+            'product': product,
+            'product_variant': product_variant,
+            'quantity': quantity,
+            'total_price': total_price,
+            'unit_price': unit_price,
+        })
+
+    context = {
+        'cart_items': cart_items,
+        'total_price': Decimal(order_data.get('total_price', 0)),
+        'name': order_data.get('name', ''),
+        'email': order_data.get('email', ''),
+        'phone': order_data.get('phone', ''),
+        'address': order_data.get('address', ''),
+        'comment': order_data.get('comment', ''),
+    }
+
+    # Очищаем данные заказа из сессии
+    if 'order_data' in request.session:
+        del request.session['order_data']
+
+    return render(request, 'samal/order_success.html', context)
 def services(request):
     services = Service.objects.all() 
     return render(request, 'samal/services.html', {'services': services})
