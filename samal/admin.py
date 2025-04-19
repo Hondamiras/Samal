@@ -25,7 +25,7 @@ class WholesalePriceAdmin(admin.ModelAdmin):
 
 @admin.register(ProductVariant)
 class ProductVariantAdmin(admin.ModelAdmin):
-    list_display = ('product', 'color', 'size')
+    list_display = ('product', 'color', 'size', 'quantity')
 
 @admin.register(ProductSize)
 class ProductSizeAdmin(admin.ModelAdmin):
