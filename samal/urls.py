@@ -36,4 +36,5 @@ urlpatterns = [
 
     # Оформление заказа конкретного варианта услуги
     path('order/<slug:service_slug>/<slug:variant_slug>/', order_service_variant, name='order_service_variant'),
+    path('order/pdf/', generate_pdf_view, name='order_pdf'),
 ]

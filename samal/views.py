@@ -551,7 +551,6 @@ def order_view(request):
     cart_items = cart.items.all() if cart else []
     total_price = sum(item.total_price for item in cart_items)
 
-    # Предустанавливаем переменные для GET-запроса
     name = email = phone = address = comment = ""
 
     if not cart_items:
@@ -570,21 +569,16 @@ def order_view(request):
                 'comment': comment,
             })
 
-        # Собираем данные формы
         name = request.POST.get('name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
         comment = request.POST.get('comment', '')
 
-        # Готовим сообщение
         subject = f"Новый заказ от {name}"
-        message_lines = [
-            "Детали заказа:",
-            "---------------------",
-        ]
-
+        message_lines = ["Детали заказа:", "---------------------"]
         order_cart_items = []
+
         for item in cart_items:
             if item.product_variant:
                 product = item.product_variant.product
@@ -630,7 +624,6 @@ def order_view(request):
         full_message = "\n\n".join(message_lines)
 
         with transaction.atomic():
-            # Уменьшаем остатки
             for item in cart_items:
                 if item.product_variant:
                     variant = item.product_variant
@@ -641,7 +634,6 @@ def order_view(request):
                     product.quantity = F('quantity') - item.quantity
                     product.save(update_fields=['quantity'])
 
-            # Отправляем письмо
             send_mail(
                 subject,
                 full_message,
@@ -649,7 +641,6 @@ def order_view(request):
                 [settings.ORDER_EMAIL, email],
             )
 
-            # Сохраняем данные заказа в сессии
             request.session['order_data'] = {
                 'cart_items': order_cart_items,
                 'name': name,
@@ -660,14 +651,12 @@ def order_view(request):
                 'total_price': str(total_price),
             }
 
-            # Удаляем корзину
             if cart:
                 cart.delete()
 
         messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
         return redirect('order_success')
 
-    # GET запрос — просто показываем форму
     return render(request, 'samal/order.html', {
         'cart_items': cart_items,
         'total_price': total_price,
@@ -708,11 +697,55 @@ def order_success_view(request):
         'comment': order_data.get('comment', ''),
     }
 
-    # Очищаем данные заказа из сессии
-    if 'order_data' in request.session:
-        del request.session['order_data']
-
     return render(request, 'samal/order_success.html', context)
+
+def generate_pdf_view(request):
+
+    order_data = request.session.get('order_data', {})
+    if not order_data:
+        return HttpResponse("Нет данных для генерации PDF", status=400)
+
+    cart_items = []
+    for item_data in order_data.get('cart_items', []):
+        product = Product.objects.get(id=item_data['product']) if item_data['product'] else None
+        product_variant = ProductVariant.objects.get(id=item_data['product_variant']) if item_data['product_variant'] else None
+
+        total_price = Decimal(item_data['total_price'])
+        quantity = item_data['quantity']
+        unit_price = total_price / quantity if quantity else 0
+
+        cart_items.append({
+            'product': product,
+            'product_variant': product_variant,
+            'quantity': quantity,
+            'total_price': total_price,
+            'unit_price': unit_price,
+        })
+
+    context = {
+        'cart_items': cart_items,
+        'total_price': Decimal(order_data.get('total_price', 0)),
+        'name': order_data.get('name', ''),
+        'email': order_data.get('email', ''),
+        'phone': order_data.get('phone', ''),
+        'address': order_data.get('address', ''),
+        'comment': order_data.get('comment', ''),
+    }
+
+    template = get_template('samal/order_invoice.html')
+    html = template.render(context)
+    result = io.BytesIO()
+    pdf = pisa.pisaDocument(io.BytesIO(html.encode('UTF-8')), result)
+
+    if not pdf.err:
+        # Удаляем данные из сессии только после успешной генерации
+        if 'order_data' in request.session:
+            del request.session['order_data']
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+
+    return HttpResponse('Ошибка при генерации PDF', status=500)
+
+
 def services(request):
     services = Service.objects.all() 
     return render(request, 'samal/services.html', {'services': services})
@@ -780,3 +813,13 @@ def order_service_variant(request, service_slug, variant_slug):
         'variant': variant,
     }
     return render(request, 'samal/order_service_variant.html', context)
+
+# --------------------------------------------------------------------------------------
+
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from decimal import Decimal
+from .models import Product, ProductVariant  # убедись, что импорт есть
+import io
+

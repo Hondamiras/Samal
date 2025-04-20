@@ -5,65 +5,148 @@
 {% block title %}Заказ успешно оформлен{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
-  <div class="max-w-lg w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-300">
-    <div class="flex flex-col items-center">
-      <!-- Animated checkmark icon -->
-      <div class="mb-6 animate-bounce text-blue-600">
-        <svg class="h-16 w-16 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ">
+    <!-- Decorative header stripe -->
+
+    <div class="px-8 py-12 sm:p-16">
+      <div class="text-center mb-14">
+        <!-- Animated checkmark container -->
+        <div class="mx-auto mb-8 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center animate-[scaleUp_0.6s_ease-out]">
+          <svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+
+        <h1 class="text-4xl font-bold text-gray-900 mb-6 relative pb-8">
+          Заказ подтверждён!
+          <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full"></div>
+        </h1>
+
+        <p class="text-lg text-gray-600 mb-10 leading-relaxed">
+          Благодарим за выбор, <span class="font-semibold text-blue-600">{{ name }}</span>!<br>
+          Ваш заказ успешно оформлен.
+        </p>
       </div>
 
-      <h1 class="text-3xl font-extrabold text-gray-900 mb-4">
-        Заказ успешно оформлен!
-        <span class="block w-12 h-1 bg-emerald-400 mt-4 mx-auto rounded-full"></span>
-      </h1>
+      <!-- Order details card -->
+      <div class="bg-gray-50 rounded-xl p-8 mb-12 border border-blue-100">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          Состав заказа
+        </h2>
 
-      <p class="text-lg text-gray-600 leading-relaxed mb-8 max-w-md">
-        Благодарим за доверие, {{ name }}! Ниже представлена информация о вашем заказе.
-      </p>
-
-      <!-- Детали заказа -->
-      <div class="w-full mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Товары:</h2>
-        <ul class="list-disc pl-5 space-y-3">
+        <div class="space-y-6">
           {% for item in cart_items %}
-            <li>
+          <div class="flex items-start justify-between p-4 bg-white rounded-lg border border-gray-100 hover:border-blue-100 transition-colors">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-800">
+                {% if item.product_variant %}
+                  {{ item.product_variant.product.name }}
+                {% else %}
+                  {{ item.product.name }}
+                {% endif %}
+              </h3>
               {% if item.product_variant %}
-                {% with prod=item.product_variant.product %}
-                  <span class="font-medium">{{ prod.name }}</span> — {{ item.quantity }} {{ prod.get_unit_display }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸ = {{ item.total_price }}₸<br>
-                  Цвет: {{ item.product_variant.color.color|default:"—" }}, Размер: {{ item.product_variant.size.size|default:"—" }}
-                {% endwith %}
-              {% else %}
-                <span class="font-medium">{{ item.product.name }}</span> — {{ item.quantity }} {{ item.product.get_unit_display }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸ = {{ item.total_price }}₸
+              <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                <span class="flex items-center">
+                  <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                  </svg>
+                  {{ item.product_variant.color.color|default:"—" }}
+                </span>
+                <span class="flex items-center">
+                  <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                  </svg>
+                  {{ item.product_variant.size.size|default:"—" }}
+                </span>
+              </div>
               {% endif %}
-            </li>
+            </div>
+            <div class="ml-4 text-right">
+              <p class="text-gray-600">{{ item.quantity }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸</p>
+              <p class="font-semibold text-blue-600">{{ item.total_price }}₸</p>
+            </div>
+          </div>
           {% endfor %}
-        </ul>
-        <p class="mt-4 text-lg font-bold">Общая сумма: {{ total_price }} ₸</p>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-200">
+          <div class="flex justify-between items-center text-lg font-bold text-gray-900">
+            <span>Итого:</span>
+            <span class="text-2xl text-blue-600">{{ total_price }} ₸</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Контактная информация -->
-      <div class="w-full mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Контактные данные:</h2>
-        <p>Имя: <span class="font-medium">{{ name }}</span></p>
-        <p>Email: <span class="font-medium">{{ email }}</span></p>
-        <p>Телефон: <span class="font-medium">{{ phone }}</span></p>
-        <p>Адрес доставки: <span class="font-medium">{{ address }}</span></p>
-        {% if comment %}
-          <p>Комментарий: <span class="italic">{{ comment }}</span></p>
-        {% endif %}
+      <!-- Contact information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Контактная информация
+          </h2>
+          <div class="space-y-2 text-gray-600">
+            <p><span class="font-medium">Имя:</span> {{ name }}</p>
+            <p><span class="font-medium">Телефон:</span> {{ phone }}</p>
+            <p><span class="font-medium">Email:</span> {{ email }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            Адрес доставки
+          </h2>
+          <p class="text-gray-600">{{ address }}</p>
+          {% if comment %}
+          <div class="mt-4">
+            <h3 class="font-medium text-gray-700">Комментарий:</h3>
+            <p class="text-gray-600 italic">{{ comment }}</p>
+          </div>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Кнопка возврата -->
-      <a href="/" class="bg-blue-600 group inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-        <svg class="mr-2 w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+      <!-- Action button -->
+      <div class="flex flex-col sm:flex-row justify-center items-center mt-8 md:mt-12 lg:mt-16 gap-4 sm:gap-6 lg:gap-8">
+  
+      <!-- Кнопка "Вернуться на главную" -->
+      <a href="/" class="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md">
+        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
-        <span>На главную</span>
+        Вернуться на главную
       </a>
+
+      <!-- Кнопка "Скачать PDF" -->
+      <a href="{% url 'order_pdf' %}" class="inline-flex items-center justify-center px-6 sm:px-6 py-2.5 text-base font-medium rounded-xl text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 transition-all duration-300 shadow">
+        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4v16m8-8H4" />
+        </svg>
+        Скачать в PDF
+      </a>
+    </div>
+
+
     </div>
   </div>
 </div>
+
+<style>
+  @keyframes scaleUp {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
 {% endblock %}
