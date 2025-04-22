@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ успешно оформлен | {{ service.title }}{% endblock %}
+
+{% block content %}
+
+  <div class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+    <!-- Иконка успеха с анимацией -->
+    <div class="mb-6 animate-bounce">
+      <svg class="mx-auto h-20 w-20 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+
+    <!-- Заголовок и информация -->
+    <div class="space-y-4 mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Спасибо за заказ!</h1>
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <p class="text-lg font-semibold text-gray-600">
+          <span class="block text-sm text-gray-500">Услуга:</span>
+          {{ service.title }}
+        </p>
+        <p class="text-lg font-semibold text-gray-600 mt-2">
+          <span class="block text-sm text-gray-500">Вариант:</span>
+          {{ variant.title }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="flex flex-col gap-4">
+      <a href="{% url 'download_invoice' %}"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Скачать счёт
+      </a>
+
+      <a href="{% url 'category' %}" 
+         class="inline-block mt-4 text-blue-600 hover:text-blue-800 transition-colors">
+        ← Вернуться на главную
+      </a>
+    </div>
+  </div>
+{% endblock %}

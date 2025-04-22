@@ -37,13 +37,53 @@
     <div class="hidden lg:flex items-center space-x-8">
         <!-- Основные пункты меню -->
         <div class="flex items-center space-x-6">
-            <a href="{% url 'services' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Услуги</a>
-            <a href="{% url 'category' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Каталог</a>
-            <a href="{% url 'cart_detail' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Корзина</a>
-            <a href="{% url 'liked_products' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Избранное</a>
-            <a href="{% url 'contact' %}" class="text-gray-600 hover:text-gray-900 hover-transition">Контакты</a>
-            <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900 hover-transition">О нас</a>
+          <a href="{% url 'category' %}"
+            class="text-gray-600 hover:text-gray-900 transition-colors">
+            Каталог
+          </a>
+          <a href="{% url 'services' %}"
+            class="text-gray-600 hover:text-gray-900 transition-colors">
+            Услуги
+          </a>
+          <a href="{% url 'contact' %}"
+            class="text-gray-600 hover:text-gray-900 transition-colors">
+            Контакты
+          </a>
+          {% comment %} <a href="{% url 'about' %}"
+            class="text-gray-600 hover:text-gray-900 transition-colors">
+            О нас
+          </a> {% endcomment %}
+
+          <!-- Избранное: заполненная иконка сердца -->
+          <a href="{% url 'liked_products' %}"
+            class="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-900 transition-colors duration-200 group"
+            aria-label="Избранное">
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                  class="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none" 
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+          </a>
+
+
+          <!-- Корзина: стилизованная иконка тележки -->
+          <a href="{% url 'cart_detail' %}"
+            class="text-blue-600 hover:text-blue-900 transition-colors"
+            aria-label="Корзина">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="currentColor">
+              <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
+            </svg>
+          </a>
         </div>
+
 
         <!-- Выпадающий список телефонов -->
         <div class="relative group" 
@@ -113,12 +153,12 @@
   <div id="mobile-menu" class="lg:hidden hidden">
     <div class="container mx-auto px-6 py-4">
       {% comment %} <a href="{% url 'home' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Главная</a> {% endcomment %}
-      <a href="{% url 'services' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Услуги</a>
       <a href="{% url 'category' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Каталог</a>
-      <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
-      <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
+      <a href="{% url 'services' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Услуги</a>
       <a href="{% url 'contact' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Контакты</a>
-      <a href="{% url 'about' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">О нас</a>
+      {% comment %} <a href="{% url 'about' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">О нас</a> {% endcomment %}
+      <a href="{% url 'liked_products' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Избранное</a>
+      <a href="{% url 'cart_detail' %}" class="block text-gray-600 hover:text-gray-900 hover-transition py-2">Корзина</a>
       </div>
     </div>
   </header>

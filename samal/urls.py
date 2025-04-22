@@ -12,7 +12,7 @@ urlpatterns = [
 
     # Контакты и информация о нас
     path('contact/', contact_view, name='contact'),
-    path('about/', about, name='about'),
+    # path('about/', about, name='about'),
 
     # Избранное, корзина и взаимодействие с ними
     path('liked/', liked_products, name='liked_products'),
@@ -33,8 +33,11 @@ urlpatterns = [
     path('services/', services, name='services'),
     path('services/<slug:slug>/', service_detail, name='service_detail'),
     path('services/<slug:service_slug>/<slug:variant_slug>/', service_variant_detail, name='service_variant_detail'),
+    path('download-invoice/', download_invoice, name='download_invoice'),
+    path('order/success/<slug:service_slug>/<slug:variant_slug>/', order_service_success, name='order_service_success'),
 
     # Оформление заказа конкретного варианта услуги
     path('order/<slug:service_slug>/<slug:variant_slug>/', order_service_variant, name='order_service_variant'),
-    path('order/pdf/', generate_pdf_view, name='order_pdf'),
+    path('order/clear/', clear_order_session, name='order_clear'),
+    path('order/invoice/', invoice_view, name='order_invoice')
 ]

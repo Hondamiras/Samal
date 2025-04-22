@@ -12,6 +12,7 @@ psycopg2-binary = "*"
 dj-database-url = "*"
 xhtml2pdf = "*"
 weasyprint = "*"
+pdfkit = "*"
 
 [dev-packages]
 

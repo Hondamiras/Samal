@@ -9,6 +9,16 @@ class ContactForm(forms.Form):
             'id': 'name'
         })
     )
+
+    phone = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-200 rounded-lg peer focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'placeholder': 'Телефон',
+            'id': 'phone',
+            'inputmode': 'numeric',
+            'pattern': '[0-9]*',
+        }),
+    )
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'w-full px-4 py-3 border border-gray-200 rounded-lg peer focus:ring-2 focus:ring-blue-500 focus:border-transparent',

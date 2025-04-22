@@ -79,18 +79,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# import dj_database_url
-
 # DATABASES = {
-#     'default': dj_database_url.config(default="sqlite:///db.sqlite3")
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
 # }
+
+import dj_database_url
+
+DATABASES = {
+    'default': dj_database_url.config(default="sqlite:///db.sqlite3")
+}
 
 
 
@@ -149,7 +149,7 @@ EMAIL_HOST_USER = 'khondamiras@gmail.com'   # логин для SMTP-серве�
 EMAIL_HOST_PASSWORD = 'chaw fqnr iinr wkaz'           # пароль для SMTP-сервера
 
 # Адрес, с которого будут отправляться письма
-DEFAULT_FROM_EMAIL = 'khondamiras@gmail.com'
+DEFAULT_FROM_EMAIL = "Samal Trade and Promotion <khondamiras@gmail.com>"
 
 # Адрес получателя сообщений с сайта (например, для обратной связи)
 CONTACT_EMAIL = 'khondamiras@gmail.com'

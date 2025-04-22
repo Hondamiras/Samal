@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+  <title>Счёт</title>
+
+  <!-- Шрифт с кириллицей -->
+  <style>
+  @font-face{
+      font-family:"DejaVuSans";
+      src:url("{% static 'fonts/DejaVuSans.ttf' %}") format("truetype");
+  }
+  </style>
+
+  <!-- Основные стили -->
+  <style>
+    :root{--blue:#2b6cb0;--gray:#718096}
+    body{
+        font-family:"DejaVuSans","Helvetica Neue",Arial,sans-serif;
+        line-height:1.6;color:#333;margin:0;padding:2rem;max-width:800px;
+        margin-inline:auto;
+    }
+    h1{margin:0 0 10px;text-transform:uppercase;color:var(--blue)}
+    .btn-print{
+        display:inline-block;margin:1.2rem 0 2rem;padding:.65rem 1.4rem;
+        background:var(--blue);color:#fff;border-radius:8px;font-size:1rem;
+        text-decoration:none
+    }
+    .info-item{margin:.35rem 0;font-size:15px}
+    .info-item strong{display:inline-block;width:150px;color:var(--gray)}
+    table{width:100%;border-collapse:collapse;margin:1.6rem 0;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    th{background:var(--blue);color:#fff;padding:12px 15px;text-align:left;font-weight:600}
+    td{padding:12px 15px;border-bottom:1px solid #e2e8f0;font-size:14px}
+    tr:nth-child(even){background:#f8fafc}
+    .total{
+        text-align:right;margin-top:24px;padding:15px;font-size:18px;font-weight:700;
+        background:#f8fafc;color:var(--blue);border-radius:6px
+    }
+    .footer{
+        margin-top:40px;padding-top:20px;border-top:2px solid #e2e8f0;
+        font-size:13px;color:var(--gray);text-align:center
+    }
+    @media print{.btn-print{display:none}body{padding:0}}
+  </style>
+</head>
+<body>
+
+  <!-- Кнопка скачивания / печати -->
+  <a href="#" class="btn-print" onclick="window.print();return false;">Скачать / Печать PDF</a>
+
+  <!-- Заголовок -->
+  <h1>Счёт</h1>
+  <p>Дата создания: {{ creation_date }}</p>
+
+  <!-- Контактные данные -->
+  <div style="background:#f8fafc;padding:20px;border-radius:8px;margin:25px 0">
+      <div class="info-item"><strong>Клиент:</strong> {{ name }}</div>
+      <div class="info-item"><strong>Телефон:</strong> {{ phone }}</div>
+      <div class="info-item"><strong>Email:</strong> {{ email }}</div>
+      <div class="info-item"><strong>Адрес доставки:</strong> {{ address }}</div>
+      {% if comment %}
+      <div class="info-item"><strong>Комментарий:</strong> {{ comment }}</div>
+      {% endif %}
+  </div>
+
+  <!-- Таблица товаров -->
+  <table>
+      <thead>
+        <tr>
+          <th>Товар</th>
+          <th>Цвет</th>
+          <th>Размер</th>
+          <th>Кол‑во</th>
+          <th>Цена за ед.</th>
+          <th>Сумма</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart_items %}
+        <tr>
+            <td>{% if item.product_variant %}{{ item.product_variant.product.name }}{% else %}{{ item.product.name }}{% endif %}</td>
+            <td>{% if item.product_variant %}{{ item.product_variant.color.color|default:"—" }}{% else %}—{% endif %}</td>
+            <td>{% if item.product_variant %}{{ item.product_variant.size.size|default:"—" }}{% else %}—{% endif %}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unit_price|floatformat:0 }} ₸</td>
+            <td>{{ item.total_price }} ₸</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+
+  <!-- Итог -->
+  <div class="total">Итого к оплате: {{ total_price }} ₸</div>
+
+  <!-- Футер -->
+    <div class="footer">
+    <p>Спасибо за ваш заказ! По всем вопросам звоните:</p>
+    <p>
+        +7 (702) 933‑05‑55 &nbsp;•&nbsp;
+        +7 (708) 122‑43‑46 &nbsp;•&nbsp;
+        +7 (747) 122‑71‑16
+    </p>
+    <p>ТОО «Samal Trade and Promotion»</p>
+    <p>Адрес: проспект Райымбека 221, Алматы, Казахстан</p>
+    </p>
+    </div>
+
+
+</body>
+</html>

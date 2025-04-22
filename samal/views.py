@@ -246,31 +246,57 @@ def product_detail(request, slug):
     }
     return render(request, 'samal/product_detail.html', context)
 
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_protect
+import logging
+from django.core.mail import EmailMessage
 
+logger = logging.getLogger(__name__)
+
+@csrf_protect
 def contact_view(request):
+    """
+    Отображает форму обратной связи и отправляет письмо администратору.
+    В случае ошибки при отправке логгирует её и показывает пользователю сообщение.
+    """
+    form = ContactForm(request.POST or None)
     if request.method == 'POST':
-        form = ContactForm(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['name']
-            email = form.cleaned_data['email']
+            name    = form.cleaned_data['name']
+            phone   = form.cleaned_data['phone']
+            email   = form.cleaned_data['email']
             message = form.cleaned_data['message']
 
             subject = f'Новое сообщение от {name}'
-            full_message = f"Сообщение от {name} ({email}):\n\n{message}"
+            body = (
+                f"Имя: {name}\n"
+                f"Телефон: {phone}\n"
+                f"Email: {email}\n\n"
+                f"{message}"
+            )
+
+            email_msg = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[settings.CONTACT_EMAIL],
+                reply_to=[email],  # чтобы админ мог сразу ответить пользователю
+            )
 
             try:
-                send_mail(
-                    subject,
-                    full_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [settings.CONTACT_EMAIL]
-                )
-                messages.success(request, 'Ваше сообщение успешно отправлено!')
-            except Exception as e:
-                messages.error(request, 'Произошла ошибка при отправке вашего сообщения. Попробуйте ещё раз позже.')
-            return redirect('contact')
-    else:
-        form = ContactForm()
+                email_msg.send(fail_silently=False)
+            except Exception as exc:
+                # Логируем причину сбоя и уведомляем пользователя
+                logger.error('Ошибка отправки контактного сообщения: %s', exc, exc_info=True)
+                messages.error(request, 'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.')
+            else:
+                messages.success(request, 'Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.')
+                return redirect('contact')  # чтобы избежать повторной отправки формы при обновлении
+
+        else:
+            # Форма не валидна: покажем ошибки
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме ниже.')
+
     return render(request, 'samal/contact.html', {'form': form})
 
 
@@ -544,208 +570,160 @@ def clear_cart(request):
 # =====================================================
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
+# -------------  ОФОРМЛЕНИЕ ЗАКАЗА  -----------------
 def order_view(request):
     session_key = get_session_key(request)
-    cart = Cart.objects.filter(session_key=session_key).first()
-    cart_items = cart.items.all() if cart else []
+    cart        = Cart.objects.filter(session_key=session_key).first()
+    cart_items  = cart.items.all() if cart else []
     total_price = sum(item.total_price for item in cart_items)
 
-    name = email = phone = address = comment = ""
+    # начальные значения для формы (GET)
+    initial_ctx = {
+        "cart_items": cart_items,
+        "total_price": total_price,
+        "name": "", "email": "", "phone": "", "address": "", "comment": "",
+    }
 
+    # --------- если корзина пуста ----------
     if not cart_items:
         messages.error(request, "Корзина пуста")
+        # даже если придёт POST без товаров — вернём страницу с ошибкой
+        return render(request, "samal/order.html", initial_ctx)
 
-    if request.method == 'POST':
+    # --------- обработка POST ----------
+    if request.method == "POST":
         if total_price < 5000:
-            messages.error(request, "Минимальная сумма заказа должна быть не менее 5000 ₸")
-            return render(request, 'samal/order.html', {
-                'cart_items': cart_items,
-                'total_price': total_price,
-                'name': name,
-                'email': email,
-                'phone': phone,
-                'address': address,
-                'comment': comment,
-            })
+            messages.error(request, "Минимальная сумма заказа — 5000 ₸")
+            return render(request, "samal/order.html", initial_ctx)
 
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        address = request.POST.get('address')
-        comment = request.POST.get('comment', '')
+        # поля формы
+        name    = request.POST.get("name", "").strip()
+        email   = request.POST.get("email", "").strip()
+        phone   = request.POST.get("phone", "").strip()
+        address = request.POST.get("address", "").strip()
+        comment = request.POST.get("comment", "").strip()
 
+        # minimal validation
+        if not name or not phone:
+            messages.error(request, "Имя и телефон обязательны")
+            initial_ctx.update({"name": name, "email": email, "phone": phone,
+                                "address": address, "comment": comment})
+            return render(request, "samal/order.html", initial_ctx)
+
+        # ---------- формируем письмо ----------
         subject = f"Новый заказ от {name}"
-        message_lines = ["Детали заказа:", "---------------------"]
+        lines   = ["Детали заказа:", "-" * 21]
         order_cart_items = []
 
         for item in cart_items:
             if item.product_variant:
                 product = item.product_variant.product
-                color = item.product_variant.color.color if item.product_variant.color else "не указан"
-                size = item.product_variant.size.size if item.product_variant.size else "не указан"
+                color   = item.product_variant.color.color if item.product_variant.color else "не указан"
+                size    = item.product_variant.size.size   if item.product_variant.size  else "не указан"
             else:
                 product = item.product
-                color = "не указан"
-                size = "не указан"
+                color = size = "не указан"
 
             unit_price = get_unit_price(item)
-            total = item_total(item)
+            total_item = item_total(item)
 
-            message_lines.append(
-                f"ID: {product.id if product else '—'}\n"
-                f"Название: {product.name if product else '—'}\n"
-                f"Количество: {item.quantity} {product.get_unit_display() if product else ''}\n"
-                f"Цвет: {color}\n"
-                f"Размер: {size}\n"
-                f"Цена за единицу: {unit_price} ₸\n"
-                f"Итого: {total} ₸\n"
-                "---------------------"
-            )
+            lines.extend([
+                f"ID: {product.id}",
+                f"Название: {product.name}",
+                f"Количество: {item.quantity} {product.get_unit_display()}",
+                f"Цвет: {color}",
+                f"Размер: {size}",
+                f"Цена за единицу: {unit_price} ₸",
+                f"Итого: {total_item} ₸",
+                "-" * 21,
+            ])
 
             order_cart_items.append({
-                'product': product.id if product else None,
-                'product_variant': item.product_variant.id if item.product_variant else None,
-                'quantity': item.quantity,
-                'total_price': str(item.total_price),
+                "product": product.id,
+                "product_variant": item.product_variant.id if item.product_variant else None,
+                "quantity": item.quantity,
+                "total_price": str(item.total_price),
             })
 
-        message_lines.append(f"Общая сумма заказа: {total_price} ₸")
-        message_lines.extend([
+        # итог и контакты
+        lines.extend([
+            f"Общая сумма: {total_price} ₸",
             "",
-            "Контактная информация:",
+            "Контактные данные:",
             f"Имя: {name}",
             f"Email: {email}",
             f"Телефон: {phone}",
-            f"Адрес доставки: {address}",
-            f"Комментарий: {comment}",
+            f"Адрес: {address}",
+            f"Комментарий: {comment or '—'}",
         ])
+        full_message = "\n".join(lines)
 
-        full_message = "\n\n".join(message_lines)
-
+        # ---------- транзакция ----------
         with transaction.atomic():
+            # уменьшаем остатки
             for item in cart_items:
                 if item.product_variant:
-                    variant = item.product_variant
-                    variant.quantity = F('quantity') - item.quantity
-                    variant.save(update_fields=['quantity'])
+                    item.product_variant.quantity = F("quantity") - item.quantity
+                    item.product_variant.save(update_fields=["quantity"])
                 else:
-                    product = item.product
-                    product.quantity = F('quantity') - item.quantity
-                    product.save(update_fields=['quantity'])
+                    item.product.quantity = F("quantity") - item.quantity
+                    item.product.save(update_fields=["quantity"])
 
+            # письмо
             send_mail(
-                subject,
-                full_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [settings.ORDER_EMAIL, email],
+                subject=subject,
+                message=full_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.ORDER_EMAIL, email],   # ← обе почты
             )
 
-            request.session['order_data'] = {
-                'cart_items': order_cart_items,
-                'name': name,
-                'email': email,
-                'phone': phone,
-                'address': address,
-                'comment': comment,
-                'total_price': str(total_price),
+            # сохраняем заказ в сессии
+            request.session["order_data"] = {
+                "cart_items": order_cart_items,
+                "name": name,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "comment": comment,
+                "total_price": str(total_price),
+                "creation_date": timezone.now().strftime("%d.%m.%Y")
             }
 
-            if cart:
-                cart.delete()
+            # очищаем корзину
+            cart.delete()
 
-        messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
-        return redirect('order_success')
+        messages.success(request, "Ваш заказ отправлен.")
+        return redirect("order_success")
 
-    return render(request, 'samal/order.html', {
-        'cart_items': cart_items,
-        'total_price': total_price,
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'address': address,
-        'comment': comment,
-    })
+    # --------- обычный GET ----------
+    return render(request, "samal/order.html", initial_ctx)
 
+
+# -------------  СТРАНИЦА УСПЕХА  -----------------
 def order_success_view(request):
-    order_data = request.session.get('order_data', {})
+    order_data = request.session.get("order_data", {})
 
-    cart_items = []
-    for item_data in order_data.get('cart_items', []):
-        product = Product.objects.get(id=item_data['product']) if item_data['product'] else None
-        product_variant = ProductVariant.objects.get(id=item_data['product_variant']) if item_data['product_variant'] else None
+    cart_items = _restore_items(order_data.get("cart_items", []))
 
-        total_price = Decimal(item_data['total_price'])
-        quantity = item_data['quantity']
-        unit_price = total_price / quantity if quantity else 0
-
-        cart_items.append({
-            'product': product,
-            'product_variant': product_variant,
-            'quantity': quantity,
-            'total_price': total_price,
-            'unit_price': unit_price,
-        })
-
-    context = {
-        'cart_items': cart_items,
-        'total_price': Decimal(order_data.get('total_price', 0)),
-        'name': order_data.get('name', ''),
-        'email': order_data.get('email', ''),
-        'phone': order_data.get('phone', ''),
-        'address': order_data.get('address', ''),
-        'comment': order_data.get('comment', ''),
+    ctx = {
+        "cart_items": cart_items,
+        "total_price": Decimal(order_data.get("total_price", 0)),
+        "name": order_data.get("name", ""),
+        "email": order_data.get("email", ""),
+        "phone": order_data.get("phone", ""),
+        "address": order_data.get("address", ""),
+        "comment": order_data.get("comment", ""),
     }
-
-    return render(request, 'samal/order_success.html', context)
-
-def generate_pdf_view(request):
-
-    order_data = request.session.get('order_data', {})
-    if not order_data:
-        return HttpResponse("Нет данных для генерации PDF", status=400)
-
-    cart_items = []
-    for item_data in order_data.get('cart_items', []):
-        product = Product.objects.get(id=item_data['product']) if item_data['product'] else None
-        product_variant = ProductVariant.objects.get(id=item_data['product_variant']) if item_data['product_variant'] else None
-
-        total_price = Decimal(item_data['total_price'])
-        quantity = item_data['quantity']
-        unit_price = total_price / quantity if quantity else 0
-
-        cart_items.append({
-            'product': product,
-            'product_variant': product_variant,
-            'quantity': quantity,
-            'total_price': total_price,
-            'unit_price': unit_price,
-        })
-
-    context = {
-        'cart_items': cart_items,
-        'total_price': Decimal(order_data.get('total_price', 0)),
-        'name': order_data.get('name', ''),
-        'email': order_data.get('email', ''),
-        'phone': order_data.get('phone', ''),
-        'address': order_data.get('address', ''),
-        'comment': order_data.get('comment', ''),
-    }
-
-    template = get_template('samal/order_invoice.html')
-    html = template.render(context)
-    result = io.BytesIO()
-    pdf = pisa.pisaDocument(io.BytesIO(html.encode('UTF-8')), result)
-
-    if not pdf.err:
-        # Удаляем данные из сессии только после успешной генерации
-        if 'order_data' in request.session:
-            del request.session['order_data']
-        return HttpResponse(result.getvalue(), content_type='application/pdf')
-
-    return HttpResponse('Ошибка при генерации PDF', status=500)
+    return render(request, "samal/order_success.html", ctx)
 
 
+
+# -------------  ОЧИСТКА СЕССИИ (по кнопке)  -----------------
+def clear_order_session(request):
+    request.session.pop("order_data", None)
+    return redirect("category")
 def services(request):
     services = Service.objects.all() 
     return render(request, 'samal/services.html', {'services': services})
@@ -767,34 +745,54 @@ def service_variant_detail(request, service_slug, variant_slug):
     return render(request, 'samal/service_variant_detail.html', context)
 
 
+from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
+from django.contrib import messages
+from django.conf import settings
+from django.utils import timezone
+from django.core.mail import send_mail
+
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+def order_service_success(request, service_slug, variant_slug):
+    """
+    Показываем страницу «Ваш заказ принят» + кнопку «Скачать PDF»
+    """
+    service = get_object_or_404(Service, slug=service_slug)
+    variant = get_object_or_404(ServiceVariant, service=service, slug=variant_slug)
+    # убедимся, что invoice_data в сессии есть
+    invoice = request.session.get('invoice_data')
+    if not invoice:
+        messages.error(request, "Нет данных для счёта.")
+        return redirect('order_service_variant', service_slug=service_slug, variant_slug=variant_slug)
+
+    return render(request, 'samal/order_service_success.html', {
+        'service': service,
+        'variant': variant,
+    })
+
 def order_service_variant(request, service_slug, variant_slug):
     service = get_object_or_404(Service, slug=service_slug)
     variant = get_object_or_404(ServiceVariant, service=service, slug=variant_slug)
-    
+
     if request.method == 'POST':
-        # Получение данных из формы заказа
-        name = request.POST.get('name')
-        user_email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        comment = request.POST.get('comment', '')
-        
-        # Формирование темы письма
-        subject = f"Новый заказ на услугу {service.title} - {variant.title} от {name}"
-        
-        # Сбор деталей заказа в сообщение
-        message_lines = [
-            "Детали заказа:",
-            f"Услуга: {service.title}",
-            f"Вариант услуги: {variant.title}",
-            "",
-            f"Имя: {name}",
-            f"Email: {user_email}",
-            f"Телефон: {phone}",
-            f"Комментарий: {comment}",
-        ]
-        full_message = "\n\n".join(message_lines)
-        
-        # Отправка письма
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        phone   = request.POST.get('phone', '').strip()
+        comment = request.POST.get('comment', '').strip()
+
+        # Отправляем письмо админу
+        subject = f"Новый заказ: {service.title} – {variant.title} от {name}"
+        full_message = (
+            f"Услуга: {service.title}\n"
+            f"Вариант: {variant.title}\n\n"
+            f"Имя: {name}\n"
+            f"Email: {email}\n"
+            f"Телефон: {phone}\n"
+            f"Комментарий: {comment or '—'}\n"
+        )
         send_mail(
             subject,
             full_message,
@@ -802,18 +800,38 @@ def order_service_variant(request, service_slug, variant_slug):
             [settings.ORDER_EMAIL],
             fail_silently=False,
         )
-        
-        # Вывод сообщения об успехе и редирект на страницу успешного оформления заказа
-        messages.success(request, "Ваш заказ отправлен. Мы свяжемся с вами в ближайшее время.")
-        return redirect('order_success')
-    
-    # При GET-запросе просто отображаем форму заказа
-    context = {
+
+        # Сохраняем данные в сессии
+        request.session['invoice_data'] = {
+            'service':       service.title,
+            'variant':       variant.title,
+            'name':          name,
+            'email':         email,
+            'phone':         phone,
+            'comment':       comment,
+            'creation_date': timezone.now().strftime("%d.%m.%Y %H:%M"),
+            'address':       "Алматы, пр. Райымбека 221",
+        }
+
+        messages.success(request, "Ваш заказ принят! Счёт доступен для скачивания.")
+        return redirect('order_service_success', service_slug=service_slug, variant_slug=variant_slug)
+
+    return render(request, 'samal/order_service_variant.html', {
         'service': service,
         'variant': variant,
-    }
-    return render(request, 'samal/order_service_variant.html', context)
+    })
 
+
+def download_invoice(request):
+    """
+    Отдаём HTML‑счёт с кнопкой печати/скачать
+    """
+    data = request.session.get('invoice_data')
+    if not data:
+        messages.error(request, "Данные для счёта не найдены.")
+        return redirect('category')
+
+    return render(request, 'samal/invoice_service.html', data)
 # --------------------------------------------------------------------------------------
 
 from django.template.loader import get_template
@@ -823,3 +841,47 @@ from decimal import Decimal
 from .models import Product, ProductVariant  # убедись, что импорт есть
 import io
 
+
+def invoice_view(request):
+    order_data = request.session.get("order_data")
+    if not order_data:
+        return HttpResponse("No order data", status=400)
+
+    items = _restore_items(order_data["cart_items"])
+
+    ctx = {
+        "cart_items": items,
+        "total_price": Decimal(order_data["total_price"]),
+        "name": order_data["name"],
+        "email": order_data["email"],
+        "phone": order_data["phone"],
+        "address": order_data["address"],
+        "comment": order_data["comment"],
+        "order_id": order_data.get("order_id", ""),
+        "creation_date": order_data.get("creation_date", ""),
+    }
+    return render(request, "samal/invoice_print.html", ctx)
+
+def _restore_items(raw_items):
+    """
+    raw_items — список словарей из session['order_data']['cart_items'].
+    Возвращает список готовых dict'ов с product / variant / unit_price.
+    """
+    restored = []
+    for it in raw_items:
+        product = Product.objects.get(id=it["product"]) if it["product"] else None
+        variant = ProductVariant.objects.get(id=it["product_variant"]) if it["product_variant"] else None
+
+        total = Decimal(it["total_price"])
+        qty   = it["quantity"]
+
+        restored.append(
+            {
+                "product": product,
+                "product_variant": variant,
+                "quantity": qty,
+                "total_price": total,
+                "unit_price": total / qty if qty else 0,
+            }
+        )
+    return restored
