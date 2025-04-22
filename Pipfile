@@ -11,8 +11,6 @@ whitenoise = "*"
 psycopg2-binary = "*"
 dj-database-url = "*"
 xhtml2pdf = "*"
-weasyprint = "*"
-pdfkit = "*"
 django-environ = "*"
 python-decouple = "*"
 
