@@ -13,6 +13,8 @@ dj-database-url = "*"
 xhtml2pdf = "*"
 weasyprint = "*"
 pdfkit = "*"
+django-environ = "*"
+python-decouple = "*"
 
 [dev-packages]
 
