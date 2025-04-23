@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+staticfiles/
+.env
+local_settings.py
+db.sqlite3
