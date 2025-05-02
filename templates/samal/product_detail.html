@@ -62,8 +62,8 @@
 
         <!-- Price -->
         <div class="flex items-baseline gap-4 mb-6">
-          <span class="text-3xl font-bold text-blue-600">
-            {{ product.price|floatformat:"-2" }} ₸
+          <span class="text-3xl font-bold text-blue-600 js-format-price" data-price="{{ product.price|floatformat:'0' }}">
+            {{ product.price|floatformat:"-0" }} ₸
           </span>
         </div>
 
@@ -81,14 +81,15 @@
           </button>
           <div id="wholesale-prices" class="pl-4 mt-2">
             {% for wp in wholesale_prices %}
-            <div class="mb-1">
-              <span class="text-lg font-semibold text-blue-600">
-                {{ wp.price|floatformat:"-2" }} ₸
-              </span>
-              <span class="text-sm text-gray-600">
-                при заказе от {{ wp.quantity }} {{ product.get_unit_display }}
-              </span>
-            </div>
+              <div class="mb-1">
+                <span class="text-lg font-semibold text-blue-600 js-format-price"
+                      data-price="{{ wp.price|floatformat:'0' }}">
+                  {{ wp.price|floatformat:"-0" }} ₸
+                </span>
+                <span class="text-sm text-gray-600">
+                  при заказе от {{ wp.quantity }} {{ product.get_unit_display }}
+                </span>
+              </div>
             {% endfor %}
           </div>
         </div>
@@ -162,7 +163,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-600 text-sm">Минимальная сумма заказа на сайте</p>
-              <p class="text-xl font-bold text-orange-600 mt-1">5 000 ₸</p>
+              <p class="text-xl font-bold text-orange-600 mt-1 js-format-price"
+                data-price="5000">
+                5 000 ₸
+              </p>
             </div>
           </div>
         </div>
@@ -207,7 +211,7 @@
                               {% if color.quantity <= 0 %}disabled{% endif %}
                               data-stock="{{ color.quantity }}">
                         {{ color.color }}
-                        {% if color.quantity > 0 %}(Осталось: {{ color.quantity }}){% endif %}
+                        {% if color.quantity > 0 %}(Доступно: {{ color.quantity }}){% endif %}
                       </option>
                       {% endfor %}
                     </select>
@@ -665,7 +669,7 @@ colorSelect.addEventListener('change', function() {
     opt.dataset.qty = item.quantity;
 
     if (item.quantity > 0) {
-      opt.textContent = `${item.size_name} (Осталось: ${item.quantity})`;
+      opt.textContent = `${item.size_name} (Доступно: ${item.quantity})`;
     } else {
       // товар закончился
       opt.textContent = `${item.size_name} — не осталось`;
@@ -849,4 +853,113 @@ colorSelect.addEventListener('change', function() {
     }
   });
 </script>
+
+<script>
+// 1. Сохраняем исходные остатки
+const originalVariants = JSON.parse('{{ variants_json|safe }}');
+
+// 2. Объект для суммирования выбранных количеств
+let selectedTotals = {};
+
+// Пересчёт выбранных сумм:
+function recalcSelectedTotals() {
+  selectedTotals = {};
+  document.querySelectorAll('.variant-group').forEach(block => {
+    const c = block.querySelector('.color-select')?.value;
+    const s = block.querySelector('.size-select')?.value;
+    const q = parseInt(block.querySelector('.quantity-input')?.value, 10) || 0;
+    if (c && s && q > 0) {
+      const key = `${c}_${s}`;
+      selectedTotals[key] = (selectedTotals[key] || 0) + q;
+    }
+  });
+}
+
+// 3. Функция обновления остатков в каждом блоке
+function updateStockDisplays() {
+  recalcSelectedTotals();
+
+  document.querySelectorAll('.variant-group').forEach(block => {
+    const color = block.querySelector('.color-select')?.value;
+    const sizeSel = block.querySelector('.size-select');
+    const qtyInput = block.querySelector('.quantity-input');
+
+    if (!color || !sizeSel) return;
+
+    // для каждого <option> размера пересчитываем остаток
+    Array.from(sizeSel.options).forEach(opt => {
+      const sizeId = opt.value;
+      // исходный остаток:
+      const origArr = originalVariants[color] || [];
+      const origItem = origArr.find(i => String(i.size_id) === sizeId);
+      if (!origItem) return;
+      const origQty = origItem.quantity;
+
+      // сколько уже выбрано ВСЕ вместе
+      const key = `${color}_${sizeId}`;
+      const totalSelected = selectedTotals[key] || 0;
+
+      // если это блок, в котором стоит текущий размер, то вычитаем выбранное в НЁМ дополнительно,
+      // чтобы не «обнулять сам себя» дважды:
+      const ownQty = (block.querySelector('.size-select').value === sizeId)
+        ? (parseInt(qtyInput.value, 10) || 0)
+        : 0;
+      const remaining = origQty - (totalSelected - ownQty);
+
+      // обновляем атрибуты и текст в опции
+      if (remaining <= 0) {
+        opt.textContent = `${opt.textContent.split(' (')[0]} — нет в наличии`;
+        opt.disabled = true;
+      } else {
+        opt.textContent = `${opt.textContent.split(' (')[0]} (Доступно: ${remaining})`;
+        opt.disabled = false;
+      }
+
+      // если эта опция сейчас выбрана — обновляем max у поля ввода
+      if (sizeSel.value === sizeId) {
+        qtyInput.max = remaining;
+        if (parseInt(qtyInput.value, 10) > remaining) {
+          qtyInput.value = remaining;
+        }
+      }
+    });
+  });
+}
+
+// 4. Вешаем вызывающие handlers:
+document.addEventListener('DOMContentLoaded', () => {
+  // а) при смене цвета и размера — показывать остатки
+  document.getElementById('variants-container').addEventListener('change', e => {
+    if (e.target.matches('.color-select, .size-select')) {
+      updateStockDisplays();
+    }
+  });
+  // б) при изменении количества — тоже обновляем доступность в других блоках
+  document.getElementById('variants-container').addEventListener('input', e => {
+    if (e.target.matches('.quantity-input')) {
+      updateStockDisplays();
+    }
+  });
+  
+  // первый прогон, чтобы всё верно отрисовалось:
+  updateStockDisplays();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // используем немецкую локаль, чтобы разделителем тысяч была точка
+  const formatter = new Intl.NumberFormat('de-DE');
+
+  document.querySelectorAll('.js-format-price').forEach(el => {
+    // читаем “сырое” число из data-price
+    const raw = el.getAttribute('data-price').replace(/\s+/g, '');
+    const num = parseInt(raw, 10);
+    if (!isNaN(num)) {
+      el.textContent = formatter.format(num) + ' ₸';
+    }
+  });
+});
+</script>
+
 {% endblock %}
