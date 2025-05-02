@@ -133,7 +133,7 @@ EMAIL_HOST_USER = config('EMAIL_USER')   # логин для SMTP-сервера
 EMAIL_HOST_PASSWORD = config('EMAIL_PASS')           # пароль для SMTP-сервера
 
 # Адрес, с которого будут отправляться письма
-DEFAULT_FROM_EMAIL = "Samal Trade and Promotion <khondamiras@gmail.com>"
+DEFAULT_FROM_EMAIL = "khondamiras@gmail.com"
 
 # Адрес получателя сообщений с сайта (например, для обратной связи)
 CONTACT_EMAIL = 'khondamiras@gmail.com'
