@@ -126,14 +126,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Если вы используете реальный SMTP-сервер:
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'         # адрес вашего SMTP-сервера
-EMAIL_PORT = 587                        # порт (обычно 587 для TLS)
-EMAIL_USE_TLS = True                    # использовать ли TLS
+
 EMAIL_HOST_USER = "khondamiras@gmail.com"   # логин для SMTP-сервера
 EMAIL_HOST_PASSWORD = "zmvf lnky jpyk usbu"           # пароль для SMTP-сервера
 
-# Адрес, с которого будут отправляться письма
-DEFAULT_FROM_EMAIL = "khondamiras@gmail.com"
+# # Адрес, с которого будут отправляться письма
+# DEFAULT_FROM_EMAIL = "khondamiras@gmail.com"
 
 # Адрес получателя сообщений с сайта (например, для обратной связи)
 CONTACT_EMAIL = 'khondamiras@gmail.com'
@@ -144,3 +142,12 @@ ORDER_EMAIL = 'khondamiras@gmail.com'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+EMAIL_HOST         = "smtp-relay.brevo.com"
+EMAIL_PORT         = 2525          # открыт у DigitalOcean
+EMAIL_USE_TLS      = True
+EMAIL_HOST_USER    = "8c290c001@smtp-brevo.com"
+EMAIL_HOST_PASSWORD = "FWVhTZX5cxjq0f6N"
+DEFAULT_FROM_EMAIL = "no-reply@saasteksinvest.uz"
+EMAIL_TIMEOUT      = 10            # чтобы воркер не зависал
