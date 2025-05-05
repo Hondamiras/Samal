@@ -127,7 +127,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Если вы используете реальный SMTP-сервер:
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST_USER = "khondamiras@gmail.com"   # логин для SMTP-сервера
+# EMAIL_HOST_USER = "khondamiras@gmail.com"   # логин для SMTP-сервера
 EMAIL_HOST_PASSWORD = "zmvf lnky jpyk usbu"           # пароль для SMTP-сервера
 
 # # Адрес, с которого будут отправляться письма
@@ -149,5 +149,5 @@ EMAIL_PORT         = 2525          # открыт у DigitalOcean
 EMAIL_USE_TLS      = True
 EMAIL_HOST_USER    = "8c290c001@smtp-brevo.com"
 EMAIL_HOST_PASSWORD = "FWVhTZX5cxjq0f6N"
-DEFAULT_FROM_EMAIL = "no-reply@saasteksinvest.uz"
+DEFAULT_FROM_EMAIL = "khondamiras@gmail.com"
 EMAIL_TIMEOUT      = 10            # чтобы воркер не зависал
