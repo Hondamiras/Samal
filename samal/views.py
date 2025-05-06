@@ -191,60 +191,97 @@ def product_search(request):
 
 
 import json
+from django.shortcuts import get_object_or_404, render
+from .models import Product, Category, ProductColor, ProductSize, Like
+
+# Порядок колонок-­размеров
+SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
 
 def product_detail(request, slug):
+    # 0) Базовые объекты
     product = get_object_or_404(Product, slug=slug)
     category = get_object_or_404(Category, slug=product.category.slug)
-    product_images = product.product_images.all()
+    product_images   = product.product_images.all()
     wholesale_prices = product.wholesale_prices.all()
-    
-    # All variants for this product (color+size+quantity)
-    product_variants_qs = product.variants.all()
 
-    if product_variants_qs.exists():
-        # Filter only colors and sizes actually present in the variants
+    # 1) Все варианты (цвет+размер+количество)
+    variants = product.variants.select_related('color', 'size').all()
+
+    # 2) Оригинальные списки цветов/размеров (если они где-то ещё используются)
+    if variants.exists():
         product_colors = ProductColor.objects.filter(
             product=product,
-            id__in=product_variants_qs.values_list('color', flat=True)
+            id__in=variants.values_list('color', flat=True)
         ).distinct()
         product_sizes = ProductSize.objects.filter(
             product=product,
-            id__in=product_variants_qs.values_list('size', flat=True)
+            id__in=variants.values_list('size', flat=True)
         ).distinct()
     else:
-        product_colors = []
-        product_sizes = []
+        product_colors = ProductColor.objects.none()
+        product_sizes  = ProductSize.objects.none()
 
-    # Build a dictionary: { color_id: [ { "size_id": X, "size_name": "...", "quantity": n }, ... ], ... }
-    grouped_variants = {}
-    for variant in product_variants_qs:
-        color_id = variant.color.id
-        if color_id not in grouped_variants:
-            grouped_variants[color_id] = []
-        grouped_variants[color_id].append({
-            'size_id': variant.size.id,
-            'size_name': variant.size.size,  # or variant.size.display_name, etc.
-            'quantity': variant.quantity
+    # 3) На всякий случай — JSON для вашего JS, как было раньше
+    grouped = {}
+    for v in variants:
+        cmap = grouped.setdefault(v.color.id, [])
+        cmap.append({
+            'size_id':   v.size.id,
+            'size_name': v.size.size,
+            'quantity':  v.quantity,
+        })
+    variants_json = json.dumps(grouped, ensure_ascii=False)
+
+    # 4) Динамика таблицы
+    # 4.1) Какие размеры реально есть?
+    all_size_names = {v.size.size for v in variants}
+    size_headers   = [sz for sz in SIZE_ORDER if sz in all_size_names]
+
+    # 4.2) Построим map: color_id → { size_name: quantity }
+    color_size_map = {}
+    for v in variants:
+        cmap = color_size_map.setdefault(v.color.id, {})
+        cmap[v.size.size] = v.quantity
+
+    # 4.3) Собираем строки для таблицы
+    rows = []
+    for color in product_colors:
+        cmap = color_size_map.get(color.id, {})
+        quantities = [ cmap.get(sz, 0) for sz in size_headers ]
+        rows.append({
+            'color':     color,
+            'quantities': quantities,
+            'row_total': sum(quantities),
         })
 
-    # Convert dict to JSON so the template can parse it
-    variants_json = json.dumps(grouped_variants, ensure_ascii=False)
+    # 4.4) Считаем итоги по каждому размеру и общий итог
+    totals      = [ sum(row['quantities'][i] for row in rows) for i in range(len(size_headers)) ]
+    grand_total = sum(totals)
 
-    # Check if user has liked this product
-    session_key = get_session_key(request)  # your own session key function
-    liked = Like.objects.filter(product=product, session_key=session_key).exists()
+    # 5) Смотрим, лайкал ли уже пользователь
+    session_key = get_session_key(request)
+    liked       = Like.objects.filter(product=product, session_key=session_key).exists()
 
-    context = {
-        'product': product,
-        'category': category,
-        'product_images': product_images,
+    # 6) Рендерим всё в контекст
+    return render(request, 'samal/product_detail.html', {
+        'product':         product,
+        'category':        category,
+        'product_images':  product_images,
         'wholesale_prices': wholesale_prices,
+
+        # для старой логики
         'product_colors': product_colors,
-        'product_sizes': product_sizes,
-        'liked': liked,
-        'variants_json': variants_json,  # Pass the JSON into the template
-    }
-    return render(request, 'samal/product_detail.html', context)
+        'product_sizes':  product_sizes,
+        'variants_json':  variants_json,
+        'liked':          liked,
+
+        # для динамической таблички
+        'size_headers':   size_headers,
+        'rows':           rows,
+        'totals':         totals,
+        'grand_total':    grand_total,
+    })
+
 
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect

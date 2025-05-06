@@ -95,32 +95,50 @@
         </div>
         {% endif %}
 
-        <!-- Цвета (список) -->
-        {% if product_colors %}
-        <div class="mb-4">
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Доступные цвета</h3>
-          <ul class="list-disc pl-5">
-            {% for color in product_colors %}
-            <li class="text-sm">
-              {{ color.color }}{% if color.quantity %} — Количество: {{ color.quantity }}{% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
+        {% if product_colors and product_sizes %}
+          <h2 class="text-2xl font-bold mb-4">Доступные варианты</h2>
+          <table class="table-auto w-full border border-gray-300 text-sm border-collapse mb-4">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border px-2 py-1">№</th>
+                <th class="border px-2 py-1">Цвета</th>
+                {% for sz in size_headers %}
+                  <th class="border px-2 py-1">{{ sz }}</th>
+                {% endfor %}
+                <th class="border px-2 py-1 font-bold">Итого</th>
+              </tr>
+            </thead>
 
-        <!-- Размеры (список) -->
-        {% if product_sizes %}
-        <div class="mb-4">
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Доступные размеры</h3>
-          <ul class="list-disc pl-5">
-            {% for size in product_sizes %}
-            <li class="text-sm">
-              {{ size.size }}{% if size.quantity %} — Количество: {{ size.quantity }}{% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
+            <tbody>
+              {% for row in rows %}
+                <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                  <td class="border px-2 py-1 text-center">{{ forloop.counter }}</td>
+                  <td class="border px-2 py-1">{{ row.color.color }}</td>
+
+                  {% for qty in row.quantities %}
+                    <td class="border px-2 py-1 text-center">
+                      {{ qty|default_if_none:"–" }}
+                    </td>
+                  {% endfor %}
+
+                  <td class="border px-2 py-1 text-center font-bold">
+                    {{ row.row_total }}
+                  </td>
+                </tr>
+              {% endfor %}
+
+              <tr class="font-bold bg-gray-200">
+                <td class="border px-2 py-1 text-center" colspan="2">Итого</td>
+                {% for tot in totals %}
+                  <td class="border px-2 py-1 text-center">{{ tot }}</td>
+                {% endfor %}
+                <td class="border px-2 py-1 text-center">{{ grand_total }}</td>
+              </tr>
+            </tbody>
+          </table>
+        {% else %}
+        <h2 class="text-2xl font-bold mb-4">Доступные варианты</h2>
+          <p class="text-gray-600 mb-4">Нет доступных вариантов для данного товара.</p>
         {% endif %}
 
         <!-- Статус наличия -->
