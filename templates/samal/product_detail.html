@@ -141,7 +141,7 @@
 
 
         <!-- Статус наличия -->
-        <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
+        {% comment %} <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
           <div class="flex items-start gap-4">
             <div class="shrink-0 mt-0.5">
               {% if product.availability == 'in_stock' %}
@@ -173,7 +173,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> {% endcomment %}
 
         <!-- Минимальная сумма заказа -->
         <div class="mb-4 pl-4 border-l-4 border-orange-200">
