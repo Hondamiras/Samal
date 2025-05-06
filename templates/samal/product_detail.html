@@ -96,50 +96,49 @@
         {% endif %}
 
         {% if product_colors and product_sizes %}
-          <h2 class="text-2xl font-bold mb-4">Доступные варианты</h2>
-          <table class="table-auto w-full border border-gray-300 text-sm border-collapse mb-4">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="border px-2 py-1">№</th>
-                <th class="border px-2 py-1">Цвета</th>
-                {% for sz in size_headers %}
-                  <th class="border px-2 py-1">{{ sz }}</th>
-                {% endfor %}
-                <th class="border px-2 py-1 font-bold">Итого</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {% for row in rows %}
-                <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
-                  <td class="border px-2 py-1 text-center">{{ forloop.counter }}</td>
-                  <td class="border px-2 py-1">{{ row.color.color }}</td>
-
-                  {% for qty in row.quantities %}
-                    <td class="border px-2 py-1 text-center">
-                      {{ qty|default_if_none:"–" }}
-                    </td>
+          <h2 class="text-2xl font-bold mb-4">Доступные цвета и размеры</h2>
+          <div class="w-full overflow-x-auto mb-4">
+            <table class="min-w-max table-auto w-full border border-gray-300 text-sm border-collapse">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="border px-2 py-1">№</th>
+                  <th class="border px-2 py-1">Цвета</th>
+                  {% for sz in size_headers %}
+                    <th class="border px-2 py-1">{{ sz }}</th>
                   {% endfor %}
-
-                  <td class="border px-2 py-1 text-center font-bold">
-                    {{ row.row_total }}
-                  </td>
+                  <th class="border px-2 py-1 font-bold">Итого</th>
                 </tr>
-              {% endfor %}
-
-              <tr class="font-bold bg-gray-200">
-                <td class="border px-2 py-1 text-center" colspan="2">Итого</td>
-                {% for tot in totals %}
-                  <td class="border px-2 py-1 text-center">{{ tot }}</td>
+              </thead>
+              <tbody>
+                {% for row in rows %}
+                  <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="border px-2 py-1 text-center">{{ forloop.counter }}</td>
+                    <td class="border px-2 py-1">{{ row.color.color }}</td>
+                    {% for qty in row.quantities %}
+                      <td class="border px-2 py-1 text-center">
+                        {{ qty|default_if_none:"–" }}
+                      </td>
+                    {% endfor %}
+                    <td class="border px-2 py-1 text-center font-bold">
+                      {{ row.row_total }}
+                    </td>
+                  </tr>
                 {% endfor %}
-                <td class="border px-2 py-1 text-center">{{ grand_total }}</td>
-              </tr>
-            </tbody>
-          </table>
+                <tr class="font-bold bg-gray-200">
+                  <td class="border px-2 py-1 text-center" colspan="2">Итого</td>
+                  {% for tot in totals %}
+                    <td class="border px-2 py-1 text-center">{{ tot }}</td>
+                  {% endfor %}
+                  <td class="border px-2 py-1 text-center">{{ grand_total }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         {% else %}
-        <h2 class="text-2xl font-bold mb-4">Доступные варианты</h2>
+          <h2 class="text-2xl font-bold mb-4">Доступные варианты</h2>
           <p class="text-gray-600 mb-4">Нет доступных вариантов для данного товара.</p>
         {% endif %}
+
 
         <!-- Статус наличия -->
         <div class="mb-4 border-l-4 {% if product.availability == 'in_stock' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
@@ -382,7 +381,7 @@
             </button>
             <div id="delivery-info" class="space-y-4 mt-4">
               <div class="p-4 bg-green-50 rounded-lg">
-                <p class="font-medium text-green-800">Бесплатный самовывоз</p>
+                <p class="font-medium text-green-800">Самовывоз</p>
                 <p class="mt-1 text-sm text-green-700">Алматы, пр. Райымбека 221</p>
               </div>
               <div class="space-y-2">
