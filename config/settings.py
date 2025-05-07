@@ -17,6 +17,12 @@ ALLOWED_HOSTS = [
     "www.samaltrading.kz",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://samaltp.kz",
+    "https://www.samaltp.kz",
+    "https://samaltrading.kz",
+    "https://www.samaltrading.kz",
+]
 
 # Application definition
 
