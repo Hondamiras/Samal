@@ -13,8 +13,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     "samaltp.kz",
     "www.samaltp.kz",
-    "localhost",           # если вы запускаете локально
-    "127.0.0.1",
+    "samaltrading.kz",
+    "www.samaltrading.kz",
 ]
 
 
