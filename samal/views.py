@@ -100,7 +100,7 @@ def category(request):
 
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
-    products_list = Product.objects.filter(category=category)
+    products_list = Product.objects.filter(category=category).order_by('id')
     sort_option = request.GET.get('sort', '')
     
     # Получаем параметры фильтрации из GET-запроса
