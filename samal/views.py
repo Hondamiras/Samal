@@ -80,7 +80,7 @@ def about(request):
 
 def category(request):
     # Получаем все категории
-    categories = Category.objects.all()
+    categories = Category.objects.all().order_by('id')
 
     # Если фильтр по типу передан, отфильтруем категории (либо товары)
     product_type = request.GET.get('type')

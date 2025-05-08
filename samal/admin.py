@@ -12,7 +12,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type')
+    list_display = ('name', 'type', 'id')
     prepopulated_fields = {'slug': ('name',)}
 
 @admin.register(ProductImage)
