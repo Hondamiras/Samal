@@ -31,53 +31,24 @@
     <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12">
       <!-- Image Gallery -->
       <div class="mb-8 lg:mb-0">
-        <div class="aspect-square bg-white rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
-          {% if product_images %}
-            <!-- Main product image -->
-            <img
-              id="main-image"
-              src="{{ product_images.0.image.url }}"
-              alt="{{ product.name }}"
-              class="w-full h-full object-contain transition-opacity duration-300"
-            >
-          {% else %}
-            <!-- Inline SVG placeholder -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-1/2 h-1/2 text-gray-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 
-                  002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2z"
-              />
-            </svg>
-          {% endif %}
+        <div class="aspect-square bg-white rounded-xl shadow-lg overflow-hidden">
+          <!-- Main product image -->
+          <img id="main-image"
+               src="{{ product_images.0.image.url }}"
+               alt="{{ product.name }}"
+               class="w-full h-full object-contain transition-opacity duration-300">
         </div>
-
-        {% if product_images %}
-          <!-- Thumbnails -->
-          <div class="mt-4 grid grid-cols-4 gap-2 sm:gap-4">
-            {% for image in product_images %}
-            <button
-              onclick="changeMainImage(event, '{{ image.image.url }}')"
-              class="aspect-square border-2 rounded-lg overflow-hidden transition-all hover:border-blue-500 {% if forloop.first %}border-blue-500{% else %}border-gray-200{% endif %}"
-            >
-              <img
-                src="{{ image.image.url }}"
-                alt="{{ product.name }}"
-                class="w-full h-full object-cover"
-              >
-            </button>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
+        <!-- Thumbnails -->
+        <div class="mt-4 grid grid-cols-4 gap-2 sm:gap-4">
+          {% for image in product_images %}
+          <button onclick="changeMainImage(event, '{{ image.image.url }}')"
+                  class="aspect-square border-2 rounded-lg overflow-hidden transition-all hover:border-blue-500 {% if forloop.first %}border-blue-500{% else %}border-gray-200{% endif %}">
+            <img src="{{ image.image.url }}"
+                 alt="{{ product.name }}"
+                 class="w-full h-full object-cover">
+          </button>
+          {% endfor %}
+        </div>
       </div>
 
       <!-- Product Details -->
