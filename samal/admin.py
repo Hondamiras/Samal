@@ -1,9 +1,27 @@
 from django.contrib import admin
 from samal.models import Product, Category, ProductImage, Service, ServiceVariant, ServiceVariantImage, WholesalePrice, ProductVariant, ProductSize, ProductColor
 
+
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 0
+    # ниже — чтобы цвет и размер подтягивались только для текущего продукта
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'color':
+            parent_id = request.resolver_match.kwargs.get('object_id')
+            if parent_id:
+                field.queryset = field.queryset.filter(product_id=parent_id)
+        if db_field.name == 'size':
+            parent_id = request.resolver_match.kwargs.get('object_id')
+            if parent_id:
+                field.queryset = field.queryset.filter(product_id=parent_id)
+        return  field
+    
 # Register your models here.
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    inlines = [ProductVariantInline]
     list_display = ('name', 'slug', 'category', 'price', 'created_at', 'updated_at')
     list_filter = ('category', 'created_at', 'updated_at')
     search_fields = ('name', 'slug')

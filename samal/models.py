@@ -1,4 +1,5 @@
 from django.db import models
+from smart_selects.db_fields import ChainedForeignKey
 
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
@@ -84,7 +85,7 @@ class ProductColor(models.Model):
     # Запас для цвета можно задать отдельно в вариантах, поэтому здесь поле можно не использовать
 
     def __str__(self):
-        return f'{self.product.name} – {self.color}'
+        return self.color
 
     class Meta:
         verbose_name = 'Цвет продукта'
@@ -97,7 +98,7 @@ class ProductSize(models.Model):
     # Аналогично, запас для размера хранится в вариантах
 
     def __str__(self):
-        return f'{self.product.name} – {self.size}'
+        return self.size
 
     class Meta:
         verbose_name = 'Размер продукта'
@@ -107,12 +108,24 @@ class ProductSize(models.Model):
 # Новый вариант товара, связывающий продукт, цвет и размер и хранящий запас (stock) для конкретной комбинации.
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants', verbose_name='Продукт')
-    color = models.ForeignKey(ProductColor, on_delete=models.CASCADE, verbose_name='Цвет')
-    size = models.ForeignKey(ProductSize, on_delete=models.CASCADE, verbose_name='Размер')
+    color   = ChainedForeignKey(
+        ProductColor,
+        chained_field="product",
+        chained_model_field="product",
+        show_all=False,
+        auto_choose=True,
+    )
+    size    = ChainedForeignKey(
+        ProductSize,
+        chained_field="product",
+        chained_model_field="product",
+        show_all=False,
+        auto_choose=True,
+    )
     quantity = models.PositiveIntegerField(default=0, verbose_name='Количество', blank=True, null=True)
 
     def __str__(self):
-        return f"{self.color.color} – {self.size.size}"
+        return f"{self.color} – {self.size}"
 
     class Meta:
         verbose_name = "Вариант товара"

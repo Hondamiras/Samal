@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     
     #my apps
     'samal.apps.SamalConfig',
+
+    #third party apps
+    'smart_selects',
 ]
 
 MIDDLEWARE = [
