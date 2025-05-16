@@ -5,18 +5,14 @@ from samal.models import Product, Category, ProductImage, Service, ServiceVarian
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 0
-    # ниже — чтобы цвет и размер подтягивались только для текущего продукта
+    # Ваш formfield_for_foreignkey тут же остаётся
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == 'color':
+        if db_field.name in ('color', 'size'):
             parent_id = request.resolver_match.kwargs.get('object_id')
             if parent_id:
                 field.queryset = field.queryset.filter(product_id=parent_id)
-        if db_field.name == 'size':
-            parent_id = request.resolver_match.kwargs.get('object_id')
-            if parent_id:
-                field.queryset = field.queryset.filter(product_id=parent_id)
-        return  field
+        return field
     
     class Media:
         js = [
@@ -33,6 +29,14 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'created_at', 'updated_at')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
+
+    class Media:
+        js = [
+            # вот они — пути относительно STATIC_URL
+            'smart-selects/admin/js/chainedfk.js',
+            'smart-selects/admin/js/chainedm2m.js',
+            'smart-selects/admin/js/bindfields.js',
+        ]
 
 
 @admin.register(Category)
