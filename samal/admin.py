@@ -18,6 +18,13 @@ class ProductVariantInline(admin.TabularInline):
                 field.queryset = field.queryset.filter(product_id=parent_id)
         return  field
     
+    class Media:
+        js = [
+            'smart-selects/admin/js/chainedfk.js',
+            'smart-selects/admin/js/chainedm2m.js',
+            'smart-selects/admin/js/bindfields.js',
+        ]
+    
 # Register your models here.
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -45,8 +52,12 @@ class WholesalePriceAdmin(admin.ModelAdmin):
 
 @admin.register(ProductVariant)
 class ProductVariantAdmin(admin.ModelAdmin):
-    list_display = ('product', 'color', 'size', 'quantity')
-
+    class Media:
+        js = [
+            'smart-selects/admin/js/chainedfk.js',
+            'smart-selects/admin/js/chainedm2m.js',
+            'smart-selects/admin/js/bindfields.js',
+        ]
 @admin.register(ProductSize)
 class ProductSizeAdmin(admin.ModelAdmin):
     list_display = ('product', 'size')
