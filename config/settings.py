@@ -14,11 +14,12 @@ SMART_SELECTS_STATIC = os.path.join(
     'static'
 )
 
+# Из каких мест собирать статику на collectstatic
 STATICFILES_DIRS = [
-    # если у вас есть своя папка static/ для проекта — оставьте её здесь
-    # BASE_DIR / "static",
+    # 1) ваша папка project_root/static/
+    BASE_DIR / 'static',
 
-    # а теперь «подцепим» статику smart-selects напрямую:
+    # 2) плюс дополнительная статика из smart_selects
     SMART_SELECTS_STATIC,
 ]
 
