@@ -8,7 +8,7 @@
   {% for service in services %}
     <a href="{% url 'service_detail' service.slug %}" class="block bg-white shadow-md rounded-lg overflow-hidden transform transition hover:scale-105">
       {% if service.image %}
-        <img src="{{ service.image.url }}" alt="{{ service.title }}" class="w-full h-48 object-cover">
+        <img src="{{ service.image.url }}" alt="{{ service.title }}" class="w-full h-70 object-cover">
       {% else %}
         <!-- Если изображение не задано, можно вывести стандартное изображение -->
         <img src="{% static 'images/default_service.jpg' %}" alt="{{ service.title }}" class="w-full h-48 object-cover">
