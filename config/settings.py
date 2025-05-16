@@ -6,6 +6,21 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import os, smart_selects
+
+# где лежит папка static внутри smart_selects
+SMART_SELECTS_STATIC = os.path.join(
+    os.path.dirname(smart_selects.__file__),
+    'static'
+)
+
+STATICFILES_DIRS = [
+    # если у вас есть своя папка static/ для проекта — оставьте её здесь
+    # BASE_DIR / "static",
+
+    # а теперь «подцепим» статику smart-selects напрямую:
+    SMART_SELECTS_STATIC,
+]
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
