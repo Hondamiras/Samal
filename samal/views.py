@@ -195,7 +195,7 @@ from django.shortcuts import get_object_or_404, render
 from .models import Product, Category, ProductColor, ProductSize, Like
 
 # Порядок колонок-­размеров
-SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
+SIZE_ORDER = ['5XS', '4XS', '3XS', '2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL']
 
 def product_detail(request, slug):
     # 0) Базовые объекты
