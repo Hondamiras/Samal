@@ -60,6 +60,9 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_editable = ('quantity',)
     list_display_links = ('product',)  # ссылка остаётся только на продукт
     save_on_top = True  # (опционально) если хочешь «Сохранить» ещё и наверху
+    list_per_page = 10
+    search_fields = ('product__name',)
+
 
     class Media:
         js = [
