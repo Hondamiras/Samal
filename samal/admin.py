@@ -57,7 +57,6 @@ class WholesalePriceAdmin(admin.ModelAdmin):
 @admin.register(ProductVariant)
 class ProductVariantAdmin(admin.ModelAdmin):
     list_display = ('product', 'color', 'size', 'quantity')
-    list_filter = ('product', 'color', 'size', 'quantity')
     list_editable = ('quantity',)
 
     class Media:
