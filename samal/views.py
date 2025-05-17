@@ -235,7 +235,20 @@ def product_detail(request, slug):
     # 4) Динамика таблицы
     # 4.1) Какие размеры реально есть?
     all_size_names = {v.size.size for v in variants}
-    size_headers   = [sz for sz in SIZE_ORDER if sz in all_size_names]
+
+    # 1) основные размеры в том порядке, который вы сами задали:
+    base = [sz for sz in SIZE_ORDER if sz in all_size_names]
+
+    # 2) а вот все XL-соффиксы, которых нет в SIZE_ORDER,
+    #    в порядке возрастания числа перед «XL»
+    extras = sorted(
+        [sz for sz in all_size_names if sz not in base and sz.endswith('XL')],
+        key=lambda s: int(s.rstrip('XL') or 1)
+    )
+
+    # 3) финальный список колонок:
+    size_headers = base + extras
+
 
     # 4.2) Построим map: color_id → { size_name: quantity }
     color_size_map = {}
