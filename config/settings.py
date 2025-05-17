@@ -168,7 +168,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # EMAIL_HOST_USER = "khondamiras@gmail.com"   # логин для SMTP-сервера
-EMAIL_HOST_PASSWORD = "zmvf lnky jpyk usbu"           # пароль для SMTP-сервера
+# EMAIL_HOST_PASSWORD = "zmvf lnky jpyk usbu"           # пароль для SMTP-сервера
 
 # # Адрес, с которого будут отправляться письма
 # DEFAULT_FROM_EMAIL = "khondamiras@gmail.com"
