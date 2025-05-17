@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
     #third party apps
     'smart_selects',
+    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -93,24 +94,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASS'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': config('DB_NAME'),
+#         'USER': config('DB_USER'),
+#         'PASSWORD': config('DB_PASS'),
+#         'HOST': config('DB_HOST'),
+#         'PORT': config('DB_PORT'),
+#     }
+# }
 
 # import dj_database_url
 
@@ -176,6 +177,9 @@ EMAIL_HOST_PASSWORD = "zmvf lnky jpyk usbu"           # пароль для SMTP
 CONTACT_EMAIL = 'khondamiras@gmail.com'
 ORDER_EMAIL = 'khondamiras@gmail.com'
 
+# Recaptcha
+RECAPTCHA_PUBLIC_KEY  = "6LewCT4rAAAAAHhWxqOIXX1FWTrMyMrz6eiTbPuU"
+RECAPTCHA_PRIVATE_KEY = "6LewCT4rAAAAAMPK5JjaPLXYTLyQ8DFpkRX1Gd4r"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

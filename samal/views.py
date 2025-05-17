@@ -300,18 +300,42 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 import logging
 from django.core.mail import EmailMessage
+import requests
 
 logger = logging.getLogger(__name__)
 
 @csrf_protect
 def contact_view(request):
-    """
-    Отображает форму обратной связи и отправляет письмо администратору.
-    В случае ошибки при отправке логгирует её и показывает пользователю сообщение.
-    """
     form = ContactForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
+            # 1) вытягиваем ответ от виджета
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            recaptcha_data = {
+                'secret':   settings.RECAPTCHA_PRIVATE_KEY,
+                'response': recaptcha_response,
+                'remoteip': request.META.get('REMOTE_ADDR'),
+            }
+
+            # 2) шлём на Google
+            try:
+                r = requests.post(
+                    'https://www.google.com/recaptcha/api/siteverify',
+                    data=recaptcha_data,
+                    timeout=5
+                )
+                result = r.json()
+            except requests.RequestException as exc:
+                logger.error("Ошибка при верификации reCAPTCHA: %s", exc, exc_info=True)
+                messages.error(request, 'Не удалось проверить капчу. Пожалуйста, попробуйте ещё раз.')
+                return render(request, 'samal/contact.html', {'form': form})
+
+            # 3) если Google говорит «неуспешно» — показываем ошибку
+            if not result.get('success'):
+                messages.error(request, 'Пожалуйста, подтвердите, что вы не робот.')
+                return render(request, 'samal/contact.html', {'form': form})
+
+            # 4) капча пройдена — собираем и отправляем письмо
             name    = form.cleaned_data['name']
             phone   = form.cleaned_data['phone']
             email   = form.cleaned_data['email']
@@ -330,25 +354,23 @@ def contact_view(request):
                 body=body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[settings.CONTACT_EMAIL],
-                reply_to=[email],  # чтобы админ мог сразу ответить пользователю
+                reply_to=[email],
             )
 
             try:
                 email_msg.send(fail_silently=False)
             except Exception as exc:
-                # Логируем причину сбоя и уведомляем пользователя
                 logger.error('Ошибка отправки контактного сообщения: %s', exc, exc_info=True)
                 messages.error(request, 'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.')
             else:
                 messages.success(request, 'Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.')
-                return redirect('contact')  # чтобы избежать повторной отправки формы при обновлении
+                return redirect('contact')  # чтобы избежать дублей при F5
 
         else:
-            # Форма не валидна: покажем ошибки
+            # сюда попадут ошибки полей формы и ошибки самого ReCaptchaField (если вы его используете)
             messages.error(request, 'Пожалуйста, исправьте ошибки в форме ниже.')
 
     return render(request, 'samal/contact.html', {'form': form})
-
 
 # =====================================================
 # Функции для работы с лайками

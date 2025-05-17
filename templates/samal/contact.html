@@ -3,6 +3,7 @@
 {% block title %}Контакты{% endblock %}
 {% block content %}
 
+
 <!-- Hero Section -->
 <section class="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 py-6 sm:py-6 mb-12">
   <div class="container mx-auto px-4 sm:px-6 md:px-8 text-center">
@@ -143,25 +144,25 @@
         </div>
 
         <!-- Подтверждение -->
-        <div class="flex items-center">
-          <input type="checkbox" 
-                 id="humanCheck" 
-                 name="humanCheck" 
-                 required 
-                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-          <label for="humanCheck" class="ml-2 text-sm text-gray-600">Я подтверждаю, что я не робот</label>
+        <div class="relative">
+          {{ form.captcha }}
+          {% if form.captcha.errors %}
+            {% for error in form.captcha.errors %}
+              <p class="text-red-600 text-sm">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
         </div>
 
-        <!-- Кнопка отправки -->
-        <button type="submit"
-                id="submitButton"
-                disabled
-                class="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          </svg>
-          Отправить сообщение
-        </button>
+
+
+
+<!-- Кнопка по-прежнему disabled -->
+<button type="submit"
+        id="submitButton"
+        disabled
+        class="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+  Отправить сообщение
+</button>
       </form>
     </div>
 
@@ -207,7 +208,14 @@
     </div>
   </div>
 </div>
-
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+  function onRecaptchaSuccess() {
+    document
+      .getElementById('submitButton')
+      .disabled = false;
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -236,15 +244,6 @@ document.addEventListener("DOMContentLoaded", function() {
     this.value = this.value.replace(/[^0-9+]/g, '');
   });
 
-  // Активация кнопки
-  const humanCheck = document.getElementById('humanCheck');
-  const submitButton = document.getElementById('submitButton');
-  submitButton.disabled = true;
-  
-  humanCheck.addEventListener('change', function() {
-    submitButton.disabled = !this.checked;
-  });
-
   // Обработка формы
   document.getElementById('contactForm').addEventListener('submit', function(e) {
     const phoneValue = phoneInput.value.trim();
@@ -267,5 +266,4 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 </script>
-
 {% endblock %}
