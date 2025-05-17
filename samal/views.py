@@ -309,40 +309,14 @@ def contact_view(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
-            # 1) вытягиваем ответ от виджета
-            recaptcha_response = request.POST.get('g-recaptcha-response')
-            recaptcha_data = {
-                'secret':   settings.RECAPTCHA_PRIVATE_KEY,
-                'response': recaptcha_response,
-                'remoteip': request.META.get('REMOTE_ADDR'),
-            }
-
-            # 2) шлём на Google
-            try:
-                r = requests.post(
-                    'https://www.google.com/recaptcha/api/siteverify',
-                    data=recaptcha_data,
-                    timeout=5
-                )
-                result = r.json()
-            except requests.RequestException as exc:
-                logger.error("Ошибка при верификации reCAPTCHA: %s", exc, exc_info=True)
-                messages.error(request, 'Не удалось проверить капчу. Пожалуйста, попробуйте ещё раз.')
-                return render(request, 'samal/contact.html', {'form': form})
-
-            # 3) если Google говорит «неуспешно» — показываем ошибку
-            if not result.get('success'):
-                messages.error(request, 'Пожалуйста, подтвердите, что вы не робот.')
-                return render(request, 'samal/contact.html', {'form': form})
-
-            # 4) капча пройдена — собираем и отправляем письмо
+            # все поля, включая captcha, валидированы django-recaptcha
             name    = form.cleaned_data['name']
             phone   = form.cleaned_data['phone']
             email   = form.cleaned_data['email']
             message = form.cleaned_data['message']
 
             subject = f'Новое сообщение от {name}'
-            body = (
+            body    = (
                 f"Имя: {name}\n"
                 f"Телефон: {phone}\n"
                 f"Email: {email}\n\n"
@@ -360,15 +334,25 @@ def contact_view(request):
             try:
                 email_msg.send(fail_silently=False)
             except Exception as exc:
-                logger.error('Ошибка отправки контактного сообщения: %s', exc, exc_info=True)
-                messages.error(request, 'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.')
+                logger.error(
+                    'Ошибка отправки контактного сообщения: %s',
+                    exc,
+                    exc_info=True
+                )
+                messages.error(
+                    request,
+                    'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.'
+                )
             else:
-                messages.success(request, 'Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.')
-                return redirect('contact')  # чтобы избежать дублей при F5
+                messages.success(
+                    request,
+                    'Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
+                )
+                return redirect('contact')  # предотвратить дубль при F5
 
         else:
-            # сюда попадут ошибки полей формы и ошибки самого ReCaptchaField (если вы его используете)
-            messages.error(request, 'Пожалуйста, исправьте ошибки в форме ниже.')
+            # сюда попадут ошибки полей и ошибки капчи
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
 
     return render(request, 'samal/contact.html', {'form': form})
 
