@@ -309,14 +309,14 @@ def contact_view(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
-            # все поля, включая captcha, валидированы django-recaptcha
+            # Собираем данные
             name    = form.cleaned_data['name']
             phone   = form.cleaned_data['phone']
             email   = form.cleaned_data['email']
             message = form.cleaned_data['message']
 
             subject = f'Новое сообщение от {name}'
-            body    = (
+            body = (
                 f"Имя: {name}\n"
                 f"Телефон: {phone}\n"
                 f"Email: {email}\n\n"
@@ -330,30 +330,18 @@ def contact_view(request):
                 to=[settings.CONTACT_EMAIL],
                 reply_to=[email],
             )
-
             try:
                 email_msg.send(fail_silently=False)
             except Exception as exc:
-                logger.error(
-                    'Ошибка отправки контактного сообщения: %s',
-                    exc,
-                    exc_info=True
-                )
-                messages.error(
-                    request,
-                    'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.'
-                )
+                logger.error("Ошибка отправки письма: %s", exc, exc_info=True)
+                messages.error(request, 'Не удалось отправить сообщение. Попробуйте позже.')
             else:
-                messages.success(
-                    request,
-                    'Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
-                )
-                return redirect('contact')  # предотвратить дубль при F5
-
+                messages.success(request, 'Ваше сообщение успешно отправлено!')
+                return redirect('contact')
         else:
-            # сюда попадут ошибки полей и ошибки капчи
+            # Если капча или другие поля не прошли проверку,
+            # все ошибки уже находятся в form.errors
             messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
-
     return render(request, 'samal/contact.html', {'form': form})
 
 # =====================================================
