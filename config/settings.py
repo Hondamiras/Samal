@@ -192,5 +192,5 @@ EMAIL_PORT         = 2525          # открыт у DigitalOcean
 EMAIL_USE_TLS      = True
 EMAIL_HOST_USER    = "8c290c001@smtp-brevo.com"
 EMAIL_HOST_PASSWORD = "FWVhTZX5cxjq0f6N"
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = "no-reply@samaltrading.kz"
 EMAIL_TIMEOUT      = 10            # чтобы воркер не зависал
