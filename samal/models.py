@@ -93,9 +93,27 @@ class ProductColor(models.Model):
 
 
 class ProductSize(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sizes', verbose_name='Продукт')
-    size = models.CharField(max_length=50, verbose_name='Размер')
-    # Аналогично, запас для размера хранится в вариантах
+    # Задаём константу порядка
+    SIZE_ORDER = [
+        '5XS', '4XS', '3XS', '2XS', 
+        'XS', 'S', 'M', 'L', 'XL', 
+        '2XL', '3XL', '4XL', '5XL', 
+        '6XL', '7XL', '8XL', '9XL', '10XL'
+    ]
+    # Генерируем список кортежей для choices
+    SIZE_CHOICES = [(size, size) for size in SIZE_ORDER]
+
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE, 
+        related_name='sizes', 
+        verbose_name='Продукт'
+    )
+    size = models.CharField(
+        max_length=50, 
+        choices=SIZE_CHOICES, 
+        verbose_name='Размер'
+    )
 
     def __str__(self):
         return self.size
