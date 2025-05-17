@@ -73,11 +73,13 @@ class ProductVariantAdmin(admin.ModelAdmin):
 class ProductSizeAdmin(admin.ModelAdmin):
     list_display = ('product', 'size')
     list_filter = ('product', 'size')
-    list_editable = ('size',)
-
+    search_fields = ('size',)
+    list_per_page = 10
 @admin.register(ProductColor)
 class ProductColorAdmin(admin.ModelAdmin):
     list_display = ('product', 'color')
+    search_fields = ('color',)
+    list_per_page = 10
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
