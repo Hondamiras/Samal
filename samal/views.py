@@ -302,6 +302,7 @@ import logging
 from django.core.mail import EmailMessage
 import requests
 
+
 logger = logging.getLogger(__name__)
 
 @csrf_protect
@@ -309,7 +310,7 @@ def contact_view(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
-            # Собираем данные
+            # 1) собираем данные из формы
             name    = form.cleaned_data['name']
             phone   = form.cleaned_data['phone']
             email   = form.cleaned_data['email']
@@ -323,27 +324,30 @@ def contact_view(request):
                 f"{message}"
             )
 
+            # 2) формируем и отправляем письмо
             email_msg = EmailMessage(
                 subject=subject,
                 body=body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[settings.CONTACT_EMAIL],
-                reply_to=[email],
+                from_email=settings.DEFAULT_FROM_EMAIL,   # no-reply@samaltrading.kz
+                to=[settings.CONTACT_EMAIL],              # ваш gmail
+                reply_to=[email],                         # чтобы вы могли ответить пользователю
             )
             try:
-                email_msg.send(fail_silently=False)
+                sent = email_msg.send(fail_silently=False)
+                logger.info("EmailMessage.send() returned %d", sent)
             except Exception as exc:
                 logger.error("Ошибка отправки письма: %s", exc, exc_info=True)
                 messages.error(request, 'Не удалось отправить сообщение. Попробуйте позже.')
             else:
                 messages.success(request, 'Ваше сообщение успешно отправлено!')
                 return redirect('contact')
-        else:
-            # Если капча или другие поля не прошли проверку,
-            # все ошибки уже находятся в form.errors
-            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
-    return render(request, 'samal/contact.html', {'form': form})
 
+        else:
+            # сюда попадут и ошибки полей, и ошибки капчи
+            messages.error(request, 'Пожалуйста, заполните все поля и подтвердите, что вы не робот.')
+
+    return render(request, 'samal/contact.html', {'form': form})
+    
 # =====================================================
 # Функции для работы с лайками
 # =====================================================

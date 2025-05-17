@@ -27,6 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
+    "127.0.0.1",
     "samaltp.kz",
     "www.samaltp.kz",
     "samaltrading.kz",
