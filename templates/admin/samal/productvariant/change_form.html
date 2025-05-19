@@ -1,0 +1,157 @@
+{# templates/admin/samal/productvariant/change_form.html #}
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <style>
+    .matrix-table {
+      border: 1px solid #e5e7eb;
+    }
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem 0.75rem;
+    }
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 10;
+    }
+    .loader {
+      border-top-color: #3b82f6;
+      animation: spinner 1s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+
+  <div id="matrix-container" class="relative mt-4">
+    <div class="loading-overlay flex items-center justify-center">
+      <div class="loader h-8 w-8 rounded-full border-4 border-gray-200"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+  (function($){
+    const renderTable = (data) => {
+      if (!data.rows.length) {
+        return `
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-gray-600">Нет доступных комбинаций цветов и размеров</p>
+          </div>
+        `;
+      }
+
+      const sizesHeader = data.sizes.map(size => 
+        `<th scope="col" class="text-center">${size}</th>`
+      ).join('');
+
+      const rows = data.rows.map((row, index) => {
+        const quantities = row.quantities.map(q =>
+          `<td class="text-center">${q !== null ? q : '–'}</td>`
+        ).join('');
+        
+        return `
+          <tr class="${index % 2 ? 'bg-white' : 'bg-gray-50'}">
+            <td class="text-center">${index + 1}</td>
+            <td>${row.color}</td>
+            ${quantities}
+            <td class="text-center font-semibold">${row.row_total}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totals = data.totals.map(total =>
+        `<td class="text-center">${total}</td>`
+      ).join('');
+
+      return `
+        <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300 matrix-table">
+            <caption class="sr-only">Таблица цветов и размеров</caption>
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="w-12">№</th>
+                <th scope="col">Цвет</th>
+                ${sizesHeader}
+                <th scope="col" class="text-center">Итого</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              ${rows}
+              <tr class="bg-gray-100 font-semibold">
+                <td colspan="2" class="text-center">Итого</td>
+                ${totals}
+                <td class="text-center">${data.grand_total}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    };
+
+    const handleError = () => {
+      return `
+        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p class="text-red-600">Ошибка загрузки данных. Попробуйте обновить страницу.</p>
+        </div>
+      `;
+    };
+
+    $(document).ready(() => {
+      const $container = $('#matrix-container');
+      const $productSelect = $('#id_product');
+      let currentProductId = null;
+
+      const loadMatrix = async (productId) => {
+        if (!productId || productId === currentProductId) return;
+        
+        currentProductId = productId;
+        $container.find('.loading-overlay').show();
+        
+        try {
+          const pathParts = window.location.pathname.split('productvariant/');
+          const baseUrl = pathParts[0] + 'productvariant/';
+          const response = await fetch(`${baseUrl}matrix/${productId}/`);
+          
+          if (!response.ok) throw new Error(response.statusText);
+          
+          const data = await response.json();
+          $container.html(renderTable(data));
+        } catch (error) {
+          console.error('Matrix loading error:', error);
+          $container.html(handleError());
+        } finally {
+          $container.find('.loading-overlay').hide();
+        }
+      };
+
+      $productSelect.on('change', function() {
+        loadMatrix(this.value);
+      });
+
+      // Initial load
+      if ($productSelect.val()) {
+        loadMatrix($productSelect.val());
+      } else {
+        $container.html(`
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-gray-600">Выберите продукт для отображения таблицы</p>
+          </div>
+        `);
+      }
+    });
+  })(django.jQuery);
+  </script>
+{% endblock %}
