@@ -421,10 +421,10 @@ document.addEventListener("DOMContentLoaded", function() {
       const totalText = cartTotalEl.textContent.replace('₸', '').trim().replace(',', '.');
       const currentTotal = parseFloat(totalText);
 
-      if (currentTotal < 5000) {
+      if (currentTotal < 75000) {
         e.preventDefault();
         const messageContainer = document.getElementById('order-message');
-        messageContainer.textContent = "Минимальная сумма заказа должна быть не менее 5000 ₸";
+        messageContainer.textContent = "Минимальная сумма заказа должна быть не менее 75000 ₸";
         messageContainer.style.display = "block";
       }
     });

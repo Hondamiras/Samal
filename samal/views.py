@@ -642,8 +642,8 @@ def order_view(request):
 
     # --------- обработка POST ----------
     if request.method == "POST":
-        if total_price < 5000:
-            messages.error(request, "Минимальная сумма заказа — 5000 ₸")
+        if total_price < 75000:
+            messages.error(request, "Минимальная сумма заказа — 75000 ₸")
             return render(request, "samal/order.html", initial_ctx)
 
         # поля формы
