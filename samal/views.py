@@ -363,7 +363,6 @@ def toggle_like(request, product_slug):
         liked = True
     return JsonResponse({'success': True, 'liked': liked})
 
-
 def liked_products(request):
     session_key = request.session.session_key
     likes = Like.objects.filter(session_key=session_key) if session_key else []
