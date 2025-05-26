@@ -497,15 +497,15 @@
       }
     });
 
-    // Блокировка заказа при <5000₸
+    // Блокировка заказа при <75000₸
     document.getElementById('order-link')?.addEventListener('click', function(e) {
       const total = parseFloat(
         document.getElementById('cart-total').textContent.replace('₸','').replace(',', '.')
       );
-      if (total < 5000) {
+      if (total < 75000) {
         e.preventDefault();
         const msg = document.getElementById('order-message');
-        if (msg) { msg.textContent = 'Минимальная сумма заказа должна быть не менее 5000 ₸'; msg.style.display='block'; }
+        if (msg) { msg.textContent = 'Минимальная сумма заказа должна быть не менее 75000 ₸'; msg.style.display='block'; }
       }
     });
 
