@@ -28,7 +28,7 @@ class ProductVariantInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductVariantInline]
-    list_display = ('name', 'slug', 'category', 'price', 'created_at', 'updated_at')
+    list_display = ('name', 'category', 'price')
     list_filter = ('category', 'created_at', 'updated_at')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
@@ -52,6 +52,7 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'image')
+    list_filter = ('product',)
 
 @admin.register(WholesalePrice)
 class WholesalePriceAdmin(admin.ModelAdmin):
