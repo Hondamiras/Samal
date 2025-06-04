@@ -142,6 +142,7 @@ class ProductSizeAdmin(admin.ModelAdmin):
 class ProductColorAdmin(admin.ModelAdmin):
     list_display = ('product', 'color')
     search_fields = ('color',)
+    list_filter = ('product',) 
     list_per_page = 10
 
 @admin.register(Service)
