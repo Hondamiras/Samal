@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% load number_filters %}
 {% block title %}Корзина{% endblock %}
 
 {% block content %}
@@ -188,6 +188,10 @@
           Оформить заказ →
         </a>
       </div>
+              <p id="order-message"
+        class="text-red-600 text-sm mt-1 text-center 
+               font-medium hidden p-2 bg-red-50 rounded-lg shadow-sm"
+        style="display: none;"></p>
     </div>
   {% else %}
     <!-- Empty Cart -->

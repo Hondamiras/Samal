@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load math_filters %}
+{% load number_filters %}
 
 {% block title %}Заказ успешно оформлен{% endblock %}
 
@@ -64,8 +65,8 @@
               {% endif %}
             </div>
             <div class="ml-4 text-right">
-              <p class="text-gray-600">{{ item.quantity }} × {{ item.total_price|divide:item.quantity|floatformat:0 }}₸</p>
-              <p class="font-semibold text-blue-600">{{ item.total_price }}₸</p>
+              <p class="text-gray-600">{{ item.quantity|dots_thousands }} × {{ item.total_price|divide:item.quantity|dots_thousands }}₸</p>
+              <p class="font-semibold text-blue-600">{{ item.total_price|dots_thousands }}₸</p>
             </div>
           </div>
           {% endfor %}
@@ -74,7 +75,7 @@
         <div class="mt-8 pt-6 border-t border-gray-200">
           <div class="flex justify-between items-center text-lg font-bold text-gray-900">
             <span>Итого:</span>
-            <span class="text-2xl text-blue-600">{{ total_price }} ₸</span>
+            <span class="text-2xl text-blue-600">{{ total_price|dots_thousands }} ₸</span>
           </div>
         </div>
       </div>

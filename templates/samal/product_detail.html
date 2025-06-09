@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load number_filters %}
 
 {% block title %}{{ product.name }}{% endblock %}
 
@@ -60,7 +61,7 @@
         <!-- Price -->
         <div class="flex items-center justify-start gap-4 mb-6">
           <span class="text-3xl font-bold text-blue-600 js-format-price" data-price="{{ product.price|floatformat:'0' }}">
-            {{ product.price|floatformat:"-0" }} ₸
+            {{ product.price|dots_thousands }} ₸
           </span>
           <span class="bg-red-100 text-red-600 text-sm font-semibold px-3 py-1 rounded-full">
             ID: {{ product.id }}
@@ -84,7 +85,7 @@
               <div class="mb-1">
                 <span class="text-lg font-semibold text-blue-600 js-format-price"
                       data-price="{{ wp.price|floatformat:'0' }}">
-                  {{ wp.price|floatformat:"-0" }} ₸
+                  {{ wp.price|dots_thousands }} ₸
                 </span>
                 <span class="text-sm text-gray-600">
                   при заказе от {{ wp.quantity }} {{ product.get_unit_display }}
@@ -116,20 +117,20 @@
                     <td class="border px-2 py-1">{{ row.color.color }}</td>
                     {% for qty in row.quantities %}
                       <td class="border px-2 py-1 text-center">
-                        {{ qty|default_if_none:"–" }}
+                        {{ qty|dots_thousands|default_if_none:"–" }}
                       </td>
                     {% endfor %}
                     <td class="border px-2 py-1 text-center font-bold">
-                      {{ row.row_total }}
+                      {{ row.row_total|dots_thousands }}
                     </td>
                   </tr>
                 {% endfor %}
                 <tr class="font-bold bg-gray-200">
                   <td class="border px-2 py-1 text-center" colspan="2">Итого</td>
                   {% for tot in totals %}
-                    <td class="border px-2 py-1 text-center">{{ tot }}</td>
+                    <td class="border px-2 py-1 text-center">{{ tot|dots_thousands }}</td>
                   {% endfor %}
-                  <td class="border px-2 py-1 text-center">{{ grand_total }}</td>
+                  <td class="border px-2 py-1 text-center">{{ grand_total|dots_thousands }}</td>
                 </tr>
               </tbody>
             </table>
@@ -228,7 +229,7 @@
                               {% if color.quantity <= 0 %}disabled{% endif %}
                               data-stock="{{ color.quantity }}">
                         {{ color.color }}
-                        {% if color.quantity > 0 %}(Доступно: {{ color.quantity }}){% endif %}
+                        {% if color.quantity > 0 %}(Доступно: {{ color.quantity|dots_thousands }}){% endif %}
                       </option>
                       {% endfor %}
                     </select>

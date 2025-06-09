@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load number_filters %}
 {% block title %}Оформление заказа{% endblock %}
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
@@ -63,10 +64,19 @@
                     <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
                         Телефон <span class="text-red-500">*</span>
                     </label>
+                    {% comment %} {# 
+                       Используем:
+                       - inputmode="numeric" (подсказка на мобильных — цифровая клавиатура)
+                       - pattern="^\+?\d+$" (допускаем либо только цифры, либо плюс и цифры)
+                       - title="..." (подскажет пользователю, что можно вводить только цифры и знак '+')
+                    #} {% endcomment %}
                     <input type="tel" id="phone" name="phone" required
+                           pattern="^\+?\d+$"
+                           inputmode="numeric"
+                           title="Допускаются только цифры и опциональный символ «+» в начале"
                            class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2
                                   focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="+7 999 999-99-99">
+                           placeholder="+79991234567">
                 </div>
 
                 <div>
@@ -104,7 +114,7 @@
                                 {% if item.product_variant %}
                                     {{ item.product_variant.product.name }}
                                 {% else %}
-                                    "Без варианта"
+                                    «Без варианта»
                                 {% endif %}
                             </h3>
 
@@ -119,31 +129,30 @@
                                 {% endif %}
                             </p>
 
-                            <!-- Цена за единицу * Количество, с проверкой на опт -->
+                            <!-- Цена за единицу × Количество, с проверкой на опт -->
                             <p class="text-sm text-gray-500">
-                                {{ item.quantity }} {{ item.product_variant.product.get_unit_display }} ×
-                                {% if item.quantity >= 1 and item.product_variant.product.wholesale_prices.all %}
-                                    <!-- Пример: если больше 100, показываем оптовую (если есть) -->
+                                {{ item.quantity|dots_thousands }} {{ item.product_variant.product.get_unit_display }} ×
+                                {% if item.quantity >= 1 and item.product_variant.product.wholesale_prices.exists %}
                                     {% if item.price_to_use < item.product_variant.product.price %}
-                                    <span class="line-through text-gray-400">{{ item.product_variant.product.price|floatformat:0 }} ₸</span>
-                                    <span class="text-green-600">
-                                        {{ item.price_to_use|floatformat:0 }} ₸
-                                    </span>
+                                        <span class="line-through text-gray-400">
+                                            {{ item.product_variant.product.price|dots_thousands }} ₸
+                                        </span>
+                                        <span class="text-green-600">
+                                            {{ item.price_to_use|dots_thousands }} ₸
+                                        </span>
                                     {% else %}
-                                    <span>
-                                        {{ item.price_to_use|floatformat:0 }} ₸
-                                    </span>
+                                        <span>{{ item.price_to_use|dots_thousands }} ₸</span>
                                     {% endif %}
                                 {% else %}
-                                  {{ item.product_variant.product.price|floatformat:0 }} ₸
+                                    {{ item.product_variant.product.price|dots_thousands }} ₸
                                 {% endif %}
-                                /{{ item.product_variant.product.get_unit_display }}
+                                /{{ item.product_variant.product.get_unit_display|dots_thousands }}
                             </p>
                         </div>
 
-                        <!-- Подсчёт итоговой стоимости -->
+                        <!-- Итоговая стоимость по этому пункту -->
                         <span class="font-medium text-gray-900">
-                            {{ item.total_price|floatformat:0 }}₸
+                            {{ item.total_price|dots_thousands }} ₸
                         </span>
                     </div>
                 {% endfor %}
@@ -152,18 +161,17 @@
             <div class="flex justify-between items-center bg-blue-50 rounded-lg p-4">
                 <span class="font-bold text-gray-800">Общая сумма:</span>
                 <span class="text-2xl font-bold text-blue-600">
-                    {{ total_price|floatformat:0 }}₸
+                    {{ total_price|dots_thousands }} ₸
                 </span>
             </div>
         </div>
 
         <!-- Form Footer -->
         <div class="mt-6">
-            <button type="submit" 
+            <button type="submit"
                     class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200">
                 Подтвердить заказ
             </button>
-            
         </div>
     </form>
 </div>

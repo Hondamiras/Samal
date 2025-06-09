@@ -1,0 +1,179 @@
+{# samal/orders_list.html #}
+{% load tz %}
+{% load number_filters %}
+
+<!DOCTYPE html>
+<html lang="ru" class="bg-gray-50">
+<head>
+  <meta charset="utf-8">
+  <title>Список заказов</title>
+  <!-- Подключаем TailwindCSS через CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+
+  <div class="w-full max-w-7xl bg-white shadow-lg rounded-lg p-6">
+    <h1 class="text-3xl font-semibold text-gray-800 mb-6">Список онлайн-заказов</h1>
+
+    {# БЛОК ФИЛЬТРА #}
+    <form method="get" class="mb-6 flex items-center gap-4">
+      <label for="status" class="font-medium text-gray-700">Фильтровать по статусу:</label>
+      <select name="status" id="status"
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {# «Все» = пустое значение #}
+        <option value="" {% if not requested_status %}selected{% endif %}>Все статусы</option>
+        {% for code,label in all_statuses %}
+          <option value="{{ code }}" {% if requested_status == code %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+        Применить
+      </button>
+      {# Если фильтр выбран, даём ссылку «Сбросить» #}
+      {% if requested_status %}
+        <a href="{% url 'orders_list' %}"
+           class="ml-4 text-sm text-gray-500 hover:underline">
+          Сбросить фильтр
+        </a>
+      {% endif %}
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Дата создания
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Клиент
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Телефон
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Продукты
+            </th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Сумма, ₸
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Статус
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Действия
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for order in orders %}
+            <tr class="{% if order.status == 'canceled' %}bg-red-50{% endif %}">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                {{ order.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                {{ order.created_at|localtime|date:"d.m.Y H:i" }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                {{ order.name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                {{ order.phone }}
+              </td>
+              <td class="px-6 py-4 whitespace-normal text-sm text-gray-700">
+                {% for item in order.items.all %}
+                  <span class="block">{{ item.product_name }} ({{ item.quantity|dots_thousands }})</span>
+                {% empty %}
+                  <span class="text-gray-400">Нет товаров</span>
+                {% endfor %}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right text-gray-800">
+                {{ order.total_price|dots_thousands }} ₸
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                {% if order.status == 'new' %}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    Новый
+                  </span>
+                {% elif order.status == 'paid' %}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Оплачен
+                  </span>
+                {% elif order.status == 'canceled' %}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    Отменён
+                  </span>
+                {% elif order.status == 'delivered' %}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                    Доставлен
+                  </span>
+                {% else %}
+                  <span class="text-gray-500">{{ order.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                <a href="{% url 'order_detail' order.id %}"
+                   class="text-indigo-600 hover:text-indigo-900">
+                  Просмотр
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8"
+                  class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                Нет ни одного заказа.
+              </td>
+            </tr>
+          {% endfor %}
+
+          <div class="mt-6 flex justify-between">
+              <div class="text-lg font-semibold text-gray-800">
+                Общая количество заказов
+                (по статусу:
+                  {# Если статус не выбран, покажем «Все» #}
+                  {% if not requested_status %}
+                    Все
+                  {% else %}
+                    {# Ищем в all_statuses нужную пару (code, label) #}
+                    {% for code,label in all_statuses %}
+                      {% if code == requested_status %}
+                        {{ label }}
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                ):
+                <span class="text-blue-600">{{ orders_total_count }}</span>
+              </div>
+
+            <div class="text-lg font-semibold text-gray-800">
+              Общая сумма
+              (по статусу:
+                {# Если статус не выбран, покажем «Все» #}
+                {% if not requested_status %}
+                  Все
+                {% else %}
+                  {# Ищем в all_statuses нужную пару (code, label) #}
+                  {% for code,label in all_statuses %}
+                    {% if code == requested_status %}
+                      {{ label }}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              ):
+              <span class="text-blue-600">{{ orders_total_sum|dots_thousands }} ₸</span>
+            </div>
+          </div>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,5 +1,72 @@
 from django.db import models
 from smart_selects.db_fields import ChainedForeignKey
+from django.utils import timezone
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'Новый'),
+        ('paid', 'Оплачен'),
+        ('canceled', 'Отменён'),
+        ('delivered', 'Доставлен'),
+    ]
+
+    # Информация о клиенте
+    name       = models.CharField(max_length=255, verbose_name="Имя клиента")
+    email      = models.EmailField(blank=True, verbose_name="Email клиента")
+    phone      = models.CharField(max_length=50, verbose_name="Телефон клиента")
+    address    = models.TextField(blank=True, verbose_name="Адрес доставки")
+    comment    = models.TextField(blank=True, verbose_name="Комментарий клиента")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    status     = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='new',
+        verbose_name="Статус заказа"
+    )
+    total_price = models.DecimalField(
+        max_digits=12, decimal_places=2, verbose_name="Итоговая сумма"
+    )
+
+    class Meta:
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Заказ #{self.id} от {self.created_at.strftime('%d.%m.%Y %H:%M')} — {self.get_status_display()}"
+
+    @property
+    def is_expired(self):
+        # True, если прошло более 24 ч. и статус всё ещё 'new'
+        if self.status == 'new':
+            return timezone.now() > self.created_at + timezone.timedelta(hours=24)
+        return False
+
+    def mark_expired(self):
+        # Помечает заказ как отменённый, но не трогает запасы
+        if self.is_expired:
+            self.status = 'canceled'
+            self.save(update_fields=['status'])
+
+
+class OrderItem(models.Model):
+    order            = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name="Заказ")
+    product_variant  = models.ForeignKey(
+        'ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Вариант товара"
+    )
+    product_name     = models.CharField(max_length=255, verbose_name="Название товара")
+    quantity         = models.PositiveIntegerField(default=1, verbose_name="Количество")
+    unit_price       = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена за единицу")
+    total_price      = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Итоговая цена позиции")
+
+    class Meta:
+        verbose_name = "Позиция заказа"
+        verbose_name_plural = "Позиции заказов"
+
+    def __str__(self):
+        return f"{self.product_name} — {self.quantity} шт. — {self.total_price} ₸"
+
 
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')

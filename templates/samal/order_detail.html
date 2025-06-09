@@ -1,0 +1,147 @@
+{% load tz %}
+{% load number_filters %}
+
+<!DOCTYPE html>
+<html lang="ru" class="bg-gray-50">
+<head>
+  <meta charset="utf-8">
+  <title>Детали заказа №{{ order.id }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+
+  <div class="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
+    <h1 class="text-2xl font-semibold mb-4">Заказ №{{ order.id }}</h1>
+
+    <!-- Блок «Дата создания» -->
+    <div class="mb-4">
+      <p class="text-gray-700">
+        <span class="font-medium">Дата создания:</span>
+        {{ order.created_at|localtime|date:"d.m.Y H:i" }}
+      </p>
+    </div>
+
+    <!-- Блок «Дедлайн / Оплачен / Отменён» -->
+    <div class="mb-6">
+      {% if order.status == 'new' %}
+        <p class="deadline text-gray-600 italic">
+          <span class="font-medium">Срок оплаты до:</span>
+          {{ payment_deadline|localtime|date:"d.m.Y H:i" }}
+        </p>
+        {% if order.is_expired %}
+          <p class="warning text-red-600 font-semibold mt-2">
+            <span class="font-medium">Внимание:</span> срок оплаты (24 ч.) истёк. Заказ автоматически отменён.
+          </p>
+        {% endif %}
+      {% elif order.status == 'paid' %}
+        <p class="paid-label text-green-700 font-bold mb-2">
+          <span class="font-medium">Статус:</span> Оплачен
+        </p>
+      {% elif order.status == 'canceled' %}
+        <p class="warning text-red-600 font-semibold mb-2">
+          <span class="font-medium">Статус:</span> Отменён (просрочен или отменён вручную)
+        </p>
+      {% else %}
+        <p class="deadline text-gray-600 italic mb-2">
+          <span class="font-medium">Статус:</span> {{ order.get_status_display }}
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Информация о клиенте -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <p class="text-gray-700"><span class="font-medium">Имя клиента:</span> {{ order.name }}</p>
+      <p class="text-gray-700"><span class="font-medium">Email:</span> {{ order.email|default:"—" }}</p>
+      <p class="text-gray-700"><span class="font-medium">Телефон:</span> {{ order.phone }}</p>
+      <p class="text-gray-700"><span class="font-medium">Адрес:</span> {{ order.address|default:"—" }}</p>
+      <div class="sm:col-span-2">
+        <p class="text-gray-700"><span class="font-medium">Комментарий:</span> {{ order.comment|default:"—" }}</p>
+      </div>
+    </div>
+
+    <!-- Товары в заказе -->
+    <h2 class="text-xl font-semibold mb-3">Товары в заказе</h2>
+    <div class="overflow-x-auto mb-6">
+      <table class="min-w-full bg-white">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 text-left text-gray-600 font-medium">Название товара</th>
+            <th class="px-4 py-2 text-left text-gray-600 font-medium">Цвет</th>
+            <th class="px-4 py-2 text-left text-gray-600 font-medium">Размер</th>
+            <th class="px-4 py-2 text-right text-gray-600 font-medium">Количество</th>
+            <th class="px-4 py-2 text-right text-gray-600 font-medium">Цена за ед., ₸</th>
+            <th class="px-4 py-2 text-right text-gray-600 font-medium">Итого, ₸</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items.all %}
+            <tr class="border-t">
+              <td class="px-4 py-3 text-gray-800">{{ item.product_name }}</td>
+              <td class="px-4 py-3 text-gray-800">{{ item.product_variant.color.color|default:"—" }}</td>
+              <td class="px-4 py-3 text-gray-800">{{ item.product_variant.size.size|default:"—" }}</td>
+              <td class="px-4 py-3 text-right text-gray-800">{{ item.quantity }}</td>
+              <td class="px-4 py-3 text-right">
+                {% if item.product_variant %}
+                  {% with retail_price=item.product_variant.product.price %}
+                    {% if item.unit_price < retail_price %}
+                      <span class="retail-strikethrough text-gray-500 line-through mr-1">
+                        {{ retail_price|dots_thousands }} ₸
+                      </span>
+                      <span class="wholesale text-green-600 font-semibold">
+                        {{ item.unit_price|dots_thousands }} ₸
+                        <sup class="text-xs font-normal">ОПТ</sup>
+                      </span>
+                    {% else %}
+                      <span class="text-gray-800">{{ item.unit_price|dots_thousands }} ₸</span>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-gray-800">{{ item.unit_price|dots_thousands }} ₸</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-800">
+                {{ item.total_price|dots_thousands }} ₸
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Общая сумма заказа -->
+    <div class="flex justify-end mb-6">
+      <p class="summary text-lg font-semibold text-gray-800">
+        Общая сумма заказа:
+        {{ order.total_price|dots_thousands }} ₸
+      </p>
+    </div>
+
+    <!-- Форма изменения статуса -->
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold mb-3">Изменить статус заказа</h2>
+      <form method="post" class="flex items-center space-x-4">
+        {% csrf_token %}
+        <select name="status" class="block px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          {% for code, label in order.STATUS_CHOICES %}
+            <option value="{{ code }}" {% if order.status == code %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+          Сохранить
+        </button>
+      </form>
+    </div>
+
+    <!-- Ссылка «Вернуться к списку заказов» -->
+    <div class="back-link">
+      <a href="{% url 'orders_list' %}" class="text-blue-600 hover:underline">
+        ← Вернуться к списку заказов
+      </a>
+    </div>
+
+  </div>
+
+</body>
+</html>

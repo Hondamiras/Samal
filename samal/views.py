@@ -192,7 +192,7 @@ def product_search(request):
 
 import json
 from django.shortcuts import get_object_or_404, render
-from .models import Product, Category, ProductColor, ProductSize, Like
+from .models import OrderItem, Product, Category, ProductColor, ProductSize, Like
 
 # Порядок колонок-­размеров
 SIZE_ORDER = ['5XS', '4XS', '3XS', '2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL']
@@ -620,152 +620,309 @@ from django.db.models import F
 from django.utils import timezone
 
 # -------------  ОФОРМЛЕНИЕ ЗАКАЗА  -----------------
+
+
+
 def order_view(request):
     session_key = get_session_key(request)
-    cart        = Cart.objects.filter(session_key=session_key).first()
-    cart_items  = cart.items.all() if cart else []
+    cart = Cart.objects.filter(session_key=session_key).first()
+
+    # Подтягиваем связанные данные через product_variant
+    if cart:
+        cart_items = cart.items.select_related(
+            'product_variant__product',
+            'product_variant__color',
+            'product_variant__size'
+        ).all()
+    else:
+        cart_items = []
+
     total_price = sum(item.total_price for item in cart_items)
 
-    # начальные значения для формы (GET)
     initial_ctx = {
+        'cart_items':  cart_items,
+        'total_price': total_price,
+        'name':  '', 'email': '', 'phone': '', 'address': '', 'comment': '',
+    }
+
+    if not cart_items:
+        messages.error(request, 'Корзина пуста')
+        return render(request, 'samal/order.html', initial_ctx)
+
+    if request.method == 'POST':
+        # Проверка минималки
+        if total_price < 75000:
+            messages.error(request, 'Минимальная сумма заказа — 75000 ₸')
+            return render(request, 'samal/order.html', initial_ctx)
+
+        # Считываем поля формы
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        phone   = request.POST.get('phone', '').strip()
+        address = request.POST.get('address', '').strip()
+        comment = request.POST.get('comment', '').strip()
+
+        if not name or not phone:
+            messages.error(request, 'Имя и телефон обязательны')
+            initial_ctx.update({
+                'name': name, 'email': email, 'phone': phone,
+                'address': address, 'comment': comment,
+            })
+            return render(request, 'samal/order.html', initial_ctx)
+
+        # Проверяем остатки на складе перед резервом
+        for item in cart_items:
+            variant = item.product_variant
+            if not variant:
+                messages.error(request, 'В корзине есть некорректный товар.')
+                return render(request, 'samal/order.html', initial_ctx)
+
+            if variant.quantity < item.quantity:
+                messages.error(
+                    request,
+                    f"Недостаточно на складе «{variant.product.name}» "
+                    f"{variant.color.color}/{variant.size.size}"
+                )
+                return render(request, 'samal/order.html', initial_ctx)
+
+        try:
+            with transaction.atomic():
+                # 1) Создаём Order
+                order = Order.objects.create(
+                    name=name,
+                    email=email or '',
+                    phone=phone,
+                    address=address or '',
+                    comment=comment or '',
+                    total_price=Decimal(total_price),
+                    status='new',
+                    # created_at проставится автоматически AutoNowAdd
+                )
+
+                order_cart_items = []
+
+                # 2) Создаём OrderItem и резервируем запасы
+                for item in cart_items:
+                    variant = item.product_variant
+                    product = variant.product
+
+                    unit_price = get_unit_price(item)
+                    total_item = item_total(item)
+
+                    OrderItem.objects.create(
+                        order=order,
+                        product_variant=variant,
+                        product_name=product.name,
+                        quantity=item.quantity,
+                        unit_price=unit_price,
+                        total_price=Decimal(total_item),
+                    )
+
+                    # резервируем
+                    variant.quantity = F('quantity') - item.quantity
+                    variant.save(update_fields=['quantity'])
+
+                    order_cart_items.append({
+                        'product_name': product.name,
+                        'color':         variant.color.color,
+                        'size':          variant.size.size,
+                        'quantity':      item.quantity,
+                        'unit_price':    str(unit_price),
+                        'total_price':   str(total_item),
+                    })
+
+                # 3) Отправка письма
+                subject = f'Новый заказ от {name}'
+                lines = ['Детали заказа:', '-'*40]
+                for idx, oi in enumerate(order_cart_items, start=1):
+                    lines += [
+                        f"{idx}. {oi['product_name']} — {oi['color']}/{oi['size']}",
+                        f"   Кол-во: {oi['quantity']}  ×  {oi['unit_price']} ₸  =  {oi['total_price']} ₸",
+                        '-'*40
+                    ]
+                lines += [
+                    f'Общая сумма: {total_price} ₸',
+                    '',
+                    'Контакты:',
+                    f'Имя: {name}',
+                    f'Email: {email or "—"}',
+                    f'Телефон: {phone}',
+                    f'Адрес: {address or "—"}',
+                    f'Комментарий: {comment or "—"}',
+                ]
+                send_mail(
+                    subject=subject,
+                    message='\n'.join(lines),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.ORDER_EMAIL] + ([email] if email else []),
+                )
+
+                # 4) Очищаем корзину и сохраняем в сессии
+                cart.delete()
+                request.session['last_order_id'] = order.id
+                request.session['order_data'] = {
+                    'order_id':       order.id,
+                    'creation_date':  order.created_at.strftime('%d.%m.%Y %H:%M'),
+                    'cart_items':     order_cart_items,
+                    'total_price':    str(total_price),
+                    'name':           name,
+                    'email':          email,
+                    'phone':          phone,
+                    'address':        address,
+                    'comment':        comment,
+                }
+
+        except Exception:
+            messages.error(request, 'Произошла ошибка при сохранении заказа. Попробуйте ещё раз.')
+            return render(request, 'samal/order.html', initial_ctx)
+
+        messages.success(request, 'Ваш заказ успешно принят! Пожалуйста, оплатите его в течение 24 часов.')
+        return redirect('order_success')
+
+    # GET
+    return render(request, 'samal/order.html', initial_ctx)
+# =====================================================
+# Страница успешного оформления заказа
+# =====================================================
+def order_success_view(request):
+    order_id = request.session.get("last_order_id")
+    order = None
+    cart_items = []
+    total_price = 0
+    name = phone = email = address = comment = ""
+
+    if order_id:
+        order = Order.objects.filter(id=order_id).first()
+        if order:
+            # извлекаем детали из order
+            name        = order.name
+            phone       = order.phone
+            email       = order.email
+            address     = order.address
+            comment     = order.comment
+            total_price = order.total_price
+            # получаем список позиций (OrderItem) переданного заказа
+            cart_items = order.items.all()
+
+            # Если вы хотите, чтобы данные сохранялись после перезагрузки,
+            # НЕ УДАЛЯЙТЕ эту строку:
+            # del request.session['last_order_id']
+
+    return render(request, "samal/order_success.html", {
+        "order": order,
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "address": address,
+        "comment": comment,
         "cart_items": cart_items,
         "total_price": total_price,
-        "name": "", "email": "", "phone": "", "address": "", "comment": "",
-    }
+    })
 
-    # --------- если корзина пуста ----------
-    if not cart_items:
-        messages.error(request, "Корзина пуста")
-        # даже если придёт POST без товаров — вернём страницу с ошибкой
-        return render(request, "samal/order.html", initial_ctx)
+# =====================================================
+# Админка для менеджеров
+# =====================================================
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render, get_object_or_404
+from .models import Order
+from django.db.models import Sum
 
-    # --------- обработка POST ----------
-    if request.method == "POST":
-        if total_price < 75000:
-            messages.error(request, "Минимальная сумма заказа — 75000 ₸")
-            return render(request, "samal/order.html", initial_ctx)
 
-        # поля формы
-        name    = request.POST.get("name", "").strip()
-        email   = request.POST.get("email", "").strip()
-        phone   = request.POST.get("phone", "").strip()
-        address = request.POST.get("address", "").strip()
-        comment = request.POST.get("comment", "").strip()
-
-        # minimal validation
-        if not name or not phone:
-            messages.error(request, "Имя и телефон обязательны")
-            initial_ctx.update({"name": name, "email": email, "phone": phone,
-                                "address": address, "comment": comment})
-            return render(request, "samal/order.html", initial_ctx)
-
-        # ---------- формируем письмо ----------
-        subject = f"Новый заказ от {name}"
-        lines   = ["Детали заказа:", "-" * 21]
-        order_cart_items = []
-
-        for item in cart_items:
-            if item.product_variant:
-                product = item.product_variant.product
-                color   = item.product_variant.color.color if item.product_variant.color else "не указан"
-                size    = item.product_variant.size.size   if item.product_variant.size  else "не указан"
+@staff_member_required(login_url='admin:login')
+def orders_list_view(request):
+    # 1) Отмечаем и обрабатываем просроченные заказы (статус 'new' старше 24 ч.)
+    now = timezone.now()
+    threshold = now - timezone.timedelta(hours=24)
+    expired_orders = Order.objects.filter(status='new', created_at__lte=threshold)
+    for order in expired_orders:
+        order.status = 'canceled'
+        order.save(update_fields=['status'])
+        # восстанавливаем запасы
+        for item in order.items.all():
+            variant = item.product_variant
+            if variant:
+                variant.quantity = F('quantity') + item.quantity
+                variant.save(update_fields=['quantity'])
             else:
-                product = item.product
-                color = size = "не указан"
+                prod = Product.objects.filter(name=item.product_name).first()
+                if prod:
+                    prod.quantity = F('quantity') + item.quantity
+                    prod.save(update_fields=['quantity'])
 
-            unit_price = get_unit_price(item)
-            total_item = item_total(item)
+    # 2) Фильтрация по статусу из GET-параметра
+    requested_status = request.GET.get('status', '')
+    valid_statuses = {key for key, _ in Order.STATUS_CHOICES}
+    if requested_status in valid_statuses:
+        orders = Order.objects.filter(status=requested_status).order_by('-created_at')
+    else:
+        orders = Order.objects.all().order_by('-created_at')
+        requested_status = ''
 
-            lines.extend([
-                f"ID: {product.id}",
-                f"Название: {product.name}",
-                f"Количество: {item.quantity} {product.get_unit_display()}",
-                f"Цвет: {color}",
-                f"Размер: {size}",
-                f"Цена за единицу: {unit_price} ₸",
-                f"Итого: {total_item} ₸",
-                "-" * 21,
-            ])
+    # 3) Подсчёт общей суммы и количества
+    aggregate_data = orders.aggregate(total_sum=Sum('total_price'))
+    total_sum = aggregate_data['total_sum'] or Decimal('0')
+    orders_count = orders.count()
 
-            order_cart_items.append({
-                "product": product.id,
-                "product_variant": item.product_variant.id if item.product_variant else None,
-                "quantity": item.quantity,
-                "total_price": str(item.total_price),
-            })
-
-        # итог и контакты
-        lines.extend([
-            f"Общая сумма: {total_price} ₸",
-            "",
-            "Контактные данные:",
-            f"Имя: {name}",
-            f"Email: {email}",
-            f"Телефон: {phone}",
-            f"Адрес: {address}",
-            f"Комментарий: {comment or '—'}",
-        ])
-        full_message = "\n".join(lines)
-
-        # ---------- транзакция ----------
-        with transaction.atomic():
-            # уменьшаем остатки
-            for item in cart_items:
-                if item.product_variant:
-                    item.product_variant.quantity = F("quantity") - item.quantity
-                    item.product_variant.save(update_fields=["quantity"])
-                else:
-                    item.product.quantity = F("quantity") - item.quantity
-                    item.product.save(update_fields=["quantity"])
-
-            # письмо
-            send_mail(
-                subject=subject,
-                message=full_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.ORDER_EMAIL, email],   # ← обе почты
-            )
-
-            # сохраняем заказ в сессии
-            request.session["order_data"] = {
-                "cart_items": order_cart_items,
-                "name": name,
-                "email": email,
-                "phone": phone,
-                "address": address,
-                "comment": comment,
-                "total_price": str(total_price),
-                "creation_date": timezone.now().strftime("%d.%m.%Y")
-            }
-
-            # очищаем корзину
-            cart.delete()
-
-        messages.success(request, "Ваш заказ отправлен.")
-        return redirect("order_success")
-
-    # --------- обычный GET ----------
-    return render(request, "samal/order.html", initial_ctx)
-
-
-# -------------  СТРАНИЦА УСПЕХА  -----------------
-def order_success_view(request):
-    order_data = request.session.get("order_data", {})
-
-    cart_items = _restore_items(order_data.get("cart_items", []))
-
-    ctx = {
-        "cart_items": cart_items,
-        "total_price": Decimal(order_data.get("total_price", 0)),
-        "name": order_data.get("name", ""),
-        "email": order_data.get("email", ""),
-        "phone": order_data.get("phone", ""),
-        "address": order_data.get("address", ""),
-        "comment": order_data.get("comment", ""),
+    context = {
+        'orders': orders,
+        'requested_status': requested_status,
+        'all_statuses': Order.STATUS_CHOICES,
+        'orders_total_sum': total_sum,
+        'orders_total_count': orders_count,
     }
-    return render(request, "samal/order_success.html", ctx)
+    return render(request, 'samal/orders_list.html', context)
 
+@staff_member_required(login_url='admin:login')
+def order_detail_view(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    # рассчитываем дедлайн оплаты
+    payment_deadline = order.created_at + timezone.timedelta(hours=24)
 
+    # 1) Авто-отмена, если просрочен
+    if order.status == 'new' and timezone.now() > payment_deadline:
+        order.status = 'canceled'
+        order.save(update_fields=['status'])
+        for item in order.items.all():
+            if item.product_variant:
+                item.product_variant.quantity = F('quantity') + item.quantity
+                item.product_variant.save(update_fields=['quantity'])
+            else:
+                prod = Product.objects.filter(name=item.product_name).first()
+                if prod:
+                    prod.quantity = F('quantity') + item.quantity
+                    prod.save(update_fields=['quantity'])
+        return redirect('order_detail', order_id=order.id)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        valid_statuses = {key for key, _ in Order.STATUS_CHOICES}
+
+        if new_status in valid_statuses and new_status != order.status:
+            prev_status = order.status
+            order.status = new_status
+            order.save(update_fields=['status'])
+
+            # 2) При платеже ничего не делаем — запасы уже зарезервированы
+            # (УБРАН блок списания при paid)
+
+            # 3) При ручной отмене возвращаем товары на склад
+            if new_status == 'canceled' and prev_status in ('new', 'paid'):
+                for item in order.items.all():
+                    if item.product_variant:
+                        item.product_variant.quantity = F('quantity') + item.quantity
+                        item.product_variant.save(update_fields=['quantity'])
+                    else:
+                        prod = Product.objects.filter(name=item.product_name).first()
+                        if prod:
+                            prod.quantity = F('quantity') + item.quantity
+                            prod.save(update_fields=['quantity'])
+
+        return redirect('order_detail', order_id=order.id)
+
+    return render(request, 'samal/order_detail.html', {
+        'order': order,
+        'payment_deadline': payment_deadline,
+    })
 
 # -------------  ОЧИСТКА СЕССИИ (по кнопке)  -----------------
 def clear_order_session(request):
@@ -909,26 +1066,54 @@ def invoice_view(request):
     }
     return render(request, "samal/invoice_print.html", ctx)
 
-def _restore_items(raw_items):
+def _restore_items(cart_items_serialized):
     """
-    raw_items — список словарей из session['order_data']['cart_items'].
-    Возвращает список готовых dict'ов с product / variant / unit_price.
+    На вход получает список словарей:
+    [
+        {
+            "product_name": "Товар A",
+            "color": "Синий",
+            "size": "L",
+            "quantity": 10,
+            "unit_price": "12345.00",
+            "total_price": "123450.00",
+        },
+        …
+    ]
+    А возвращает список объектов (или просто тех же словарей), 
+    удобных для рендеринга в шаблоне:
     """
     restored = []
-    for it in raw_items:
-        product = Product.objects.get(id=it["product"]) if it["product"] else None
-        variant = ProductVariant.objects.get(id=it["product_variant"]) if it["product_variant"] else None
-
-        total = Decimal(it["total_price"])
-        qty   = it["quantity"]
-
-        restored.append(
-            {
-                "product": product,
-                "product_variant": variant,
-                "quantity": qty,
-                "total_price": total,
-                "unit_price": total / qty if qty else 0,
-            }
-        )
+    for x in cart_items_serialized:
+        restored.append({
+            "product_name": x["product_name"],
+            "color": x["color"],
+            "size": x["size"],
+            "quantity": x["quantity"],
+            "unit_price": Decimal(x["unit_price"]),
+            "total_price": Decimal(x["total_price"]),
+        })
     return restored
+
+def invoice_view(request):
+    order_data = request.session.get("order_data")
+    if not order_data:
+        return HttpResponse("No order data", status=400)
+
+    # мы сохранили cart_items в виде списка dict-ов, но
+    # функция _restore_items, если нужна, может восстанавливать объекты CartItem.
+    # Если вам достаточно вывести их как есть (dict с полями), вы можете не вызывать _restore_items.
+    items = order_data.get("cart_items", [])
+
+    ctx = {
+        "cart_items": items,
+        "total_price": Decimal(order_data.get("total_price", "0")),
+        "name": order_data.get("name", ""),
+        "email": order_data.get("email", ""),
+        "phone": order_data.get("phone", ""),
+        "address": order_data.get("address", ""),
+        "comment": order_data.get("comment", ""),
+        "order_id": order_data.get("order_id", ""),
+        "creation_date": order_data.get("creation_date", ""),
+    }
+    return render(request, "samal/invoice_print.html", ctx)
