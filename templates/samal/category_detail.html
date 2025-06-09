@@ -110,9 +110,14 @@
             <div class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
                 <a href="{% url 'product_detail' product.slug %}" class="block overflow-hidden rounded-t-xl">
                     <div class="relative h-80 overflow-hidden">
-                        <img src="{{ product.image.url }}" 
-                            alt="{{ product.name }}"
-                            class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+                                Нет изображения
+                            </div>
+                        {% endif %}
                     </div>
                 </a>
                 <div class="p-5">
