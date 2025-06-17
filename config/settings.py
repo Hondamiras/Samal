@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     
     #my apps
     'samal.apps.SamalConfig',
+    'direct_sales.apps.DirectSalesConfig',
 
     #third party apps
     'smart_selects',
