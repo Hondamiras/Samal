@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.db.models import F
 from smart_selects.db_fields import ChainedForeignKey
 from django.utils import timezone
 
@@ -28,6 +30,17 @@ class Order(models.Model):
         max_digits=12, decimal_places=2, verbose_name="Итоговая сумма"
     )
 
+    ORDER_SOURCE_CHOICES = [
+    ('site', 'Сайт'),
+    ('direct', 'Прямая продажа'),
+    ]
+    source = models.CharField(
+        max_length=10,
+        choices=ORDER_SOURCE_CHOICES,
+        default='site',
+        verbose_name='Источник заказа'
+    )
+
     class Meta:
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
@@ -49,7 +62,6 @@ class Order(models.Model):
             self.status = 'canceled'
             self.save(update_fields=['status'])
 
-
 class OrderItem(models.Model):
     order            = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name="Заказ")
     product_variant  = models.ForeignKey(
@@ -67,6 +79,28 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product_name} — {self.quantity} шт. — {self.total_price} ₸"
 
+    def save(self, *args, **kwargs):
+        # 1) считаем, на сколько изменилось количество
+        if self.pk:
+            old = OrderItem.objects.get(pk=self.pk)
+            delta = self.quantity - old.quantity
+        else:
+            delta = self.quantity
+
+        # 2) проверяем остаток
+        variant = self.product_variant
+        if variant.quantity is not None and variant.quantity < delta:
+            raise ValidationError(
+                f"Недостаточно товара {variant} на складе (осталось {variant.quantity})."
+            )
+
+        # 3) атомарно списываем со склада
+        ProductVariant.objects.filter(pk=variant.pk).update(
+            quantity=F('quantity') - delta
+        )
+
+        # 4) сохраняем саму позицию
+        super().save(*args, **kwargs)
 
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
@@ -84,7 +118,6 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-
 
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
@@ -131,7 +164,6 @@ class Product(models.Model):
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
 
-
 class WholesalePrice(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wholesale_prices', verbose_name='Продукт')
     quantity = models.PositiveIntegerField(verbose_name='Количество')
@@ -143,7 +175,6 @@ class WholesalePrice(models.Model):
     class Meta:
         verbose_name = 'Оптовая цена'
         verbose_name_plural = 'Оптовые цены'
-
 
 # Модели для базовых вариантов: цвет и размер.
 class ProductColor(models.Model):
@@ -157,7 +188,6 @@ class ProductColor(models.Model):
     class Meta:
         verbose_name = 'Цвет продукта'
         verbose_name_plural = 'Цвета продуктов'
-
 
 class ProductSize(models.Model):
     # Задаём константу порядка
@@ -189,7 +219,6 @@ class ProductSize(models.Model):
         verbose_name = 'Размер продукта'
         verbose_name_plural = 'Размеры продуктов'
 
-
 # Новый вариант товара, связывающий продукт, цвет и размер и хранящий запас (stock) для конкретной комбинации.
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants', verbose_name='Продукт')
@@ -217,7 +246,6 @@ class ProductVariant(models.Model):
         verbose_name_plural = "Варианты товаров"
         unique_together = ("product", "color", "size")
 
-
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_images', verbose_name='Продукт')
     image = models.ImageField(upload_to='product_images/', verbose_name='Изображение продукта')
@@ -228,7 +256,6 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = 'Изображение продукта'
         verbose_name_plural = 'Изображения продуктов'
-
 
 class Like(models.Model):
     session_key = models.CharField(max_length=40, verbose_name="Идентификатор сессии")
@@ -242,7 +269,6 @@ class Like(models.Model):
         verbose_name = 'Лайк'
         verbose_name_plural = 'Лайки'
         unique_together = ('session_key', 'product')
-
 
 class Cart(models.Model):
     session_key = models.CharField(max_length=40, unique=True, verbose_name="Идентификатор сессии")
@@ -259,7 +285,6 @@ class Cart(models.Model):
     @property
     def total_price(self):
         return sum(item.total_price for item in self.items.all())
-
 
 # Модель CartItem, которая теперь ссылается на конкретный вариант товара
 class CartItem(models.Model):
@@ -316,7 +341,6 @@ class Service(models.Model):
 
     def __str__(self):
         return self.title
-    
     
 class ServiceVariant(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="variants")

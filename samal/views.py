@@ -26,7 +26,6 @@ def get_session_key(request):
         session_key = request.session.session_key
     return session_key
 
-
 def get_unit_price(item):
     """
     Возвращает оптовую цену, если количество товара в корзине
@@ -46,14 +45,11 @@ def get_unit_price(item):
         return product.price
     return 0
 
-
-
 def item_total(item):
     """
     Вычисляет общую стоимость товара в корзине (цена за единицу * количество).
     """
     return get_unit_price(item) * item.quantity
-
 
 def calculate_cart_total(session_key):
     """
@@ -63,21 +59,9 @@ def calculate_cart_total(session_key):
     total = sum(get_unit_price(item) * item.quantity for item in cart_items)
     return total
 
-
 # =====================================================
 # Основные страницы и представления
 # =====================================================
-
-def home(request):
-    categories = Category.objects.all()
-    context = {'categories': categories}
-    return render(request, 'samal/home.html', context)
-
-
-def about(request):
-    return render(request, 'samal/about.html')
-
-
 def category(request):
     # Получаем все категории
     categories = Category.objects.all().order_by('id')
@@ -621,8 +605,6 @@ from django.utils import timezone
 
 # -------------  ОФОРМЛЕНИЕ ЗАКАЗА  -----------------
 
-
-
 def order_view(request):
     session_key = get_session_key(request)
     cart = Cart.objects.filter(session_key=session_key).first()
@@ -1044,7 +1026,6 @@ from xhtml2pdf import pisa
 from decimal import Decimal
 from .models import Product, ProductVariant  # убедись, что импорт есть
 import io
-
 
 def invoice_view(request):
     order_data = request.session.get("order_data")

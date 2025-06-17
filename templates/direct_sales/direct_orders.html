@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Прямые продажи</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap 5 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <style>
+    .order-card {
+      border: none;
+      border-radius: .75rem;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+    }
+    .accordion-button {
+      font-weight: 500;
+      font-size: 1rem;
+    }
+    .table thead {
+      background-color: #f8f9fa;
+    }
+    .total-badge {
+      background-color: #0d6efd;
+      color: #fff;
+      font-size: .9rem;
+      padding: .4rem .75rem;
+      border-radius: .5rem;
+    }
+  </style>
+</head>
+<body class="bg-light py-5">
+
+  <div class="container">
+    <h1 class="mb-4 text-center">Список отгрузок по прямым заказам(оффлайн продажи)</h1>
+
+    <!-- Форма поиска и фильтра -->
+    <form class="row g-2 align-items-end mb-4" method="get">
+      <div class="col-md-4">
+        <label for="q" class="form-label">Поиск по клиенту или №</label>
+        <input 
+          type="text" 
+          id="q" 
+          name="q" 
+          class="form-control" 
+          placeholder="Имя клиента или номер"
+          value="{{ q }}"
+        >
+      </div>
+      <div class="col-md-3">
+        <label for="from" class="form-label">Дата с</label>
+        <input 
+          type="date" 
+          id="from" 
+          name="from" 
+          class="form-control"
+          value="{{ date_from }}"
+        >
+      </div>
+      <div class="col-md-3">
+        <label for="to" class="form-label">Дата по</label>
+        <input 
+          type="date" 
+          id="to" 
+          name="to" 
+          class="form-control"
+          value="{{ date_to }}"
+        >
+      </div>
+      <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary">Применить</button>
+      </div>
+    </form>
+
+    {% if page_obj %}
+      <div class="accordion" id="directOrdersAccordion">
+        {% for order in page_obj %}
+          <div class="accordion-item order-card mb-4">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+              <button 
+                class="accordion-button collapsed p-4" 
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse{{ forloop.counter }}"
+                aria-expanded="false"
+                aria-controls="collapse{{ forloop.counter }}"
+              >
+                <div class="d-flex w-100 align-items-center">
+                  <div>
+                    <div class="h5 mb-1">{{ order.name }}</div>
+                    <div class="text-muted small">
+                      № {{ order.id_name }} • {{ order.time|date:"d.m.Y H:i" }}
+                    </div>
+                  </div>
+                  <div class="ms-auto">
+                    <span class="total-badge">
+                      Итого: {{ order.total_price|floatformat:2 }}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            </h2>
+            <div 
+              id="collapse{{ forloop.counter }}" 
+              class="accordion-collapse collapse" 
+              aria-labelledby="heading{{ forloop.counter }}"
+              data-bs-parent="#directOrdersAccordion"
+            >
+              <div class="accordion-body p-4">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <p class="mb-1"><strong>Ид. Номер отгрузки по М.С.:</strong></p>
+                    <p>{{ order.identification_number }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="mb-1"><strong>Создан:</strong></p>
+                    <p>{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                  </div>
+                </div>
+
+                <h5 class="mb-3">Позиции по вариантам</h5>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Категория</th>
+                        <th>Артикул / Наименование</th>
+                        <th>Цвет и размер</th>
+                        <th class="text-end">Кол-во</th>
+                        <th class="text-end">Цена</th>
+                        <th class="text-end">Итого</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for it in order.grouped_items %}
+                        <tr>
+                          <td>{{ it.category }}</td>
+                          <td>{{ it.product }}</td>
+                          <td>{{ it.variant }}</td>
+                          <td class="text-end">{{ it.quantity }}</td>
+                          <td class="text-end">{{ it.unit_price|floatformat:2 }}</td>
+                          <td class="text-end">{{ it.total_price|floatformat:2 }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Отдельный блок итогов -->
+                <div class="d-flex justify-content-end align-items-center gap-5 mt-3 p-3 bg-light border rounded">
+                  <div class="fw-semibold">
+                    Итого штучно: <span class="fw-bold">{{ order.total_quantity }}</span>
+                  </div>
+                  <div class="fw-semibold">
+                    Общая сумма: <span class="fw-bold">{{ order.total_price|floatformat:2 }}</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Пагинация -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&from={{ date_from }}&to={{ date_to }}">&laquo;</a>
+            </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+              <a class="page-link" href="?page={{ num }}&q={{ q }}&from={{ date_from }}&to={{ date_to }}">{{ num }}</a>
+            </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&from={{ date_from }}&to={{ date_to }}">&raquo;</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+
+    {% else %}
+      <div class="alert alert-secondary text-center">
+        Прямых заказов пока нет.
+      </div>
+    {% endif %}
+
+  </div>
+
+  <script 
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>
